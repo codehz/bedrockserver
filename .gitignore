@@ -1,0 +1,7 @@
+.nimakefiles
+.vscode
+bin
+lib
+*-build
+nimcache
+*.so
