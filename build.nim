@@ -72,7 +72,10 @@ target "lib" / "libhybris.a":
   depIt: walkDirRec("libhybris" / "include")
   depIt: walkDirRec("libhybris" / "src")
   main = "libhybris" / "CMakeLists.txt"
-  rule:
+  clean:
+    rm target
+    rm "libhybris-build"
+  receipt:
     mkdir "lib"
     withDir "libhybris-build":
       exec "cmake ../libhybris"
@@ -83,7 +86,10 @@ target "bin" / "bedrockserver":
   dep: toSeq(walkDirRec("src")).filterIt("nimcache" notin it)
   dep: ["lib" / "libhybris.a"]
   main = "src" / "entry.nim"
-  rule:
+  clean:
+    rm main.parentDir / "nimcache"
+    rm target
+  receipt:
     mkdir "bin"
     exec &"nim cpp -o:{target} {Options} {main}"
 
@@ -96,9 +102,10 @@ const refs = [
 for reference in refs:
   target "bridge" / "refs" / reference / "CMakeLists.txt":
     clean:
-      removeDir target.parentDir
-    rule:
+      rm target.parentDir
+    receipt:
       withDir target.parentDir.parentDir:
+        let reference = target.parentDir.splitPath[1]
         exec &"git clone https://github.com/minecraft-linux/{reference} --depth 1"
 
 # target "bin" / "bridge.so":
@@ -109,4 +116,4 @@ for reference in refs:
 #     mkdir "bin"
 #     exec &"nim cpp -o:{target} {BridgeOptions} {main}"
 
-echo build()
+handleCLI()
