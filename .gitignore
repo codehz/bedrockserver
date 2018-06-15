@@ -5,3 +5,5 @@ lib
 *-build
 nimcache
 *.so
+temp
+refs
