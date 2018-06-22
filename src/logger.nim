@@ -7,7 +7,7 @@ template fatalQ*(str: string) =
 
 when not defined(bridge):
   import hybris
-  addHandler(newConsoleLogger(lvlAll, "$levelid "))
+  addHandler(newConsoleLogger(lvlAll, "\r$levelid "))
   hook("mcpelauncher_log", proc(level: Level, str: cstring) {.cdecl.} = log level, str)
 else:
   import strutils

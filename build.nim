@@ -1,71 +1,43 @@
 #!/bin/env nimake
 
-import nimake
+import nimake, os
 
 const
   COptions = [
     "-m32",
-    "-O0",
-    "-g",
+    "-Os",
+    "-fno-rtti",
     "-Ilibhybris/include"
   ].mapIt(&"-t:{it}").join " "
   LinkOptions = [
     "-m32",
+    "-Os",
     "-L./lib",
-    # "-rdynamic",
-    # "-static",
-    # "-Wl,--warn-once",
-    # "-Wl,--whole-archive",
+    "-static",
+    "-lrt",
     "-lpthread",
-    # "-lrt",
-    # "-Wl,--no-whole-archive",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-ffunction-sections",
+    "-fdata-sections",
+    "-Wl,--gc-sections",
+    "-w",
+    "-s"
     ].mapIt(&"-l:{it}").join " "
   Options = [
     COptions,
     LinkOptions,
     "-d:noSignalHandler",
+    "-d:release",
+    "-d:useMalloc",
+    "--deadCodeElim:on",
+    "--opt:size",
     "--cpu:i386",
     "--verbosity:0",
     "--Hint[Processing]:off",
     "--Hint[Conf]:off",
     "--Hint[Link]:off",
     "--Hint[SuccessX]:off",
-  ].join " "
-  BridgeCOptions = [
-    "-O0",
-    "-g",
-    "-Ibridge/include",
-    "-fno-rtti",
-    "-ffast-math",
-    "-std=gnu++14"
-  ].mapIt(&"-t:{it}").join " "
-  BridgeLinkOptions = [
-    "-Lcore",
-    "-lminecraftpe",
-    "-nostdlib",
-    "-nodefaultlibs",
-    "-Wl,--gc-sections",
-    "-lstdc++",
-    "-ffast-math"
-  ].mapIt(&"-l:{it}").join " "
-  BridgeOptions = [
-    BridgeCOptions,
-    BridgeLinkOptions,
-    "-d:noSignalHandler",
-    "-d:release",
-    "-d:useMalloc",
-    "-d:bridge",
-    "--app:lib",
-    "--cpu:i386",
-    "--os:android",
-    "--cc:gcc",
-    "--gc:regions",
-    "--noCppExceptions",
-    "--verbosity:0",
-    "--Hint[Processing]:off",
-    "--Hint[Conf]:off",
-    "--Hint[Link]:off",
-    "--Hint[SuccessX]:off"
   ].join " "
 
 target "lib" / "libhybris.a":
@@ -93,27 +65,37 @@ target "bin" / "bedrockserver":
     mkdir "bin"
     exec &"nim cpp -o:{target} {Options} {main}"
 
-const refs = [
-  "mcpelauncher-core",
-  "mcpelauncher-server",
-  "minecraft-symbols",
-]
+target "bridge" / "refs" / "minecraft-symbols" / ".target":
+  dep: ["bridge" / "patch" / "minecraft-symbols" & ".sh"]
+  clean:
+    rm target.parentDir
+  receipt:
+    withDir target.parentDir.parentDir:
+      let reference = target.parentDir.splitPath[1]
+      exec &"git -C {reference} pull || git clone https://github.com/minecraft-linux/{reference} --depth 1 {reference}"
+      withDir reference:
+        exec &"bash ../../patch/{reference}.sh"
 
-for reference in refs:
-  target "bridge" / "refs" / reference / "CMakeLists.txt":
-    clean:
-      rm target.parentDir
-    receipt:
-      withDir target.parentDir.parentDir:
-        let reference = target.parentDir.splitPath[1]
-        exec &"git clone https://github.com/minecraft-linux/{reference} --depth 1"
+let
+  cpp = getEnv("CPP", "i686-linux-android-g++")
 
-# target "bin" / "bridge.so":
-#   dep: toSeq(walkDirRec("bridge")).filterIt("nimcache" notin it)
-#   dep: toSeq(walkDirRec("src")).filterIt("nimcache" notin it)
-#   main = "bridge" / "entry.nim"
-#   rule:
-#     mkdir "bin"
-#     exec &"nim cpp -o:{target} {BridgeOptions} {main}"
+const BridgeCOptions = [
+  "-shared",
+  "-std=c++14",
+  "-Os",
+  "-fPIC",
+  "-Ibridge/include",
+  "-Ibridge/refs/minecraft-symbols/src"
+].join " "
+
+target "bin" / "bridge.so":
+  depIt: walkDirRec "bridge" / "src"
+  depIt: walkDirRec "bridge" / "include"
+  dep: ["bridge" / "refs" / "minecraft-symbols" / ".target"]
+  dep: toSeq(walkDirRec "bridge" / "refs").filterIt(".git" notin it).filterIt("darwin" notin it)
+  receipt:
+    let allsrc = deps.filterIt(it.endsWith ".cpp").join " "
+    exec &"{cpp} {BridgeCOptions} -shared -std=c++14 -fPIC -o {target} {allsrc}"
+    exec &"strip {target}"
 
 handleCLI()

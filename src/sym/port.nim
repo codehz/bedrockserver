@@ -224,4 +224,6 @@ const syms* = [
 #MATH END
   "statvfs",
   "sysinfo",
+  "getpwuid_r",
+  "sigemptyset"
 ]

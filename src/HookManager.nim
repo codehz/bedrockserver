@@ -46,6 +46,8 @@ type
 var
   hookLibraries = newTable[pointer, HookInfo] 16
 
+proc exp(name: string): string = "mcpelauncher_internal_" & name
+
 proc patchSection(base: Elf32_Addr, offset: Elf32_Off, size: Elf32_Word, sym, override: pointer): bool =
   var address = base + offset + 4
   while address < base + offset + size:
@@ -64,7 +66,9 @@ proc patchLibrary(lib, sym, override: pointer): bool =
     if patchSection(si.base, se.address, se.size, sym, override):
       result = true
 
-proc addHookLibrary*(p: pointer, path: string) =
+proc addHookLibrary*(p: pointer, pathC: cstring)
+  {.exportc:exp"addHookLibrary", cdecl, dynlib.} =
+  let path = $pathC
   let lib = cast[ptr SoInfo](p)
   if lib in hookLibraries:
     return
@@ -92,7 +96,8 @@ proc addHookLibrary*(p: pointer, path: string) =
     else: discard
   hookLibraries.add lib, hi
 
-proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int =
+proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int
+  {.exportc:exp"hookFunction", cdecl, dynlib.} =
   orig[] = symbol
   for lib, info in hookLibraries:
     if patchLibrary(lib, symbol, hook):
