@@ -2,8 +2,7 @@ const doc = """
 Minecraft Bedrock Server Launcher
 
 Usage:
-  ./bedrockserver run [<profile>]
-  ./bedrockserver start [<profile>]
+  ./bedrockserver [<profile>]
   ./bedrockserver -h | --help
   ./bedrockserver --version
 
@@ -85,7 +84,6 @@ when isMainModule:
     dict = loadConfig configfile
 
   try:
-    if args["run"]:
-      run()
+    run()
   except:
     fatalQ getCurrentExceptionMsg()
