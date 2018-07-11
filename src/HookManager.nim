@@ -42,9 +42,14 @@ type
     constructors_called: int32
     gnu_relro_start: Elf32_Addr
     gnu_relro_len: uint32
+  HookDef = object
+    hook: pointer
+    origin: ptr pointer
+    ret: int
 
 var
   hookLibraries = newTable[pointer, HookInfo] 16
+  hookChain = newTable[pointer, HookDef] 16
 
 proc exp(name: string): string = "mcpelauncher_internal_" & name
 
@@ -96,11 +101,21 @@ proc addHookLibrary*(p: pointer, pathC: cstring)
     else: discard
   hookLibraries.add lib, hi
 
-proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int
-  {.exportc:exp"hookFunction", cdecl, dynlib.} =
+proc hookFunctionImpl(symbol, hook: pointer, orig: ptr pointer): int =
   orig[] = symbol
   for lib, info in hookLibraries:
     if patchLibrary(lib, symbol, hook):
       result = 1
   if result == 0:
     error "Failed to hook a symbol: " & $cast[ByteAddress](symbol)
+
+proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int
+  {.exportc:exp"hookFunction", cdecl, dynlib.} =
+  if hook in hookChain:
+    let def = hookChain[hook]
+    orig[] = def.origin
+    def.origin[] = hook
+    hookChain[hook] = HookDef(hook: hook, origin: orig, ret: def.ret)
+  else:
+    let ret = hookFunctionImpl(symbol, hook, orig)
+    hookChain[hook] = HookDef(hook: hook, origin: orig, ret: ret)
