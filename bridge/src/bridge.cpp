@@ -77,16 +77,16 @@ extern "C" void bridge_init(void *handle)
   pathmgr.setPackagePath(appPlatform->getPackagePath());
   pathmgr.setSettingsPath(pathmgr.getRootPath());
   Log::trace("Bridge", "Initializing resource loaders");
-  Resource::registerLoader((ResourceFileSystem)1, std::unique_ptr<ResourceLoader>(new AppResourceLoader([&pathmgr] { return pathmgr.getPackagePath(); })));
-  Resource::registerLoader((ResourceFileSystem)8, std::unique_ptr<ResourceLoader>(new AppResourceLoader([&pathmgr] { return pathmgr.getUserDataPath(); })));
-  Resource::registerLoader((ResourceFileSystem)4, std::unique_ptr<ResourceLoader>(new AppResourceLoader([&pathmgr] { return pathmgr.getSettingsPath(); })));
+  ResourceLoaders::registerLoader((ResourceFileSystem)1, std::unique_ptr<ResourceLoader>(new AppResourceLoader([&pathmgr] { return pathmgr.getPackagePath(); })));
+  ResourceLoaders::registerLoader((ResourceFileSystem)8, std::unique_ptr<ResourceLoader>(new AppResourceLoader([&pathmgr] { return pathmgr.getUserDataPath(); })));
+  ResourceLoaders::registerLoader((ResourceFileSystem)4, std::unique_ptr<ResourceLoader>(new AppResourceLoader([&pathmgr] { return pathmgr.getSettingsPath(); })));
 
   MinecraftEventing eventing(pathmgr.getRootPath());
   eventing.init();
   Log::trace("Bridge", "Initializing ResourcePackManager");
   ContentTierManager ctm;
   ResourcePackManager *resourcePackManager = new ResourcePackManager([&pathmgr]() { return pathmgr.getRootPath(); }, ctm);
-  Resource::registerLoader((ResourceFileSystem)0, std::unique_ptr<ResourceLoader>(resourcePackManager));
+  ResourceLoaders::registerLoader((ResourceFileSystem)0, std::unique_ptr<ResourceLoader>(resourcePackManager));
   Log::trace("Bridge", "Initializing PackManifestFactory");
   PackManifestFactory packManifestFactory(eventing);
   Log::trace("Bridge", "Initializing SkinPackKeyProvider");
