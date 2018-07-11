@@ -1,6 +1,5 @@
-
-import memfiles, strutils, tables, sets
-import hybris, logger, elf
+import memfiles, strutils, tables, sets, ospaths
+import hybris, logger, elf, HookManager
 
 var depCache = initTable[string, HashSet[string]] 16
 var mods = initTable[string, Handle] 16
@@ -49,18 +48,22 @@ proc getModDependencies(path: string): seq[string] =
 proc loadMulti(file: string, others: var HashSet[string]) =
   let deps = depCache[file]
   for dep in deps:
-    if dep in others:
-      others.excl dep
-      loadMulti file, others
+    for oth in others:
+      if extractFilename(oth) == dep:
+        others.excl oth
+        loadMulti oth, others
+        others.excl oth
+        break
   
   notice "ModLoader: Loading mod: ", file
   let handle = loadMod file
+  addHookLibrary (pointer)handle, file
   if handle.isValid:
     mods.add file, handle
 
 proc loadAll*(srcs: seq[string]) =
   if srcs.len == 0: return
-  var modsToLoad = initSet[string] srcs.len
+  var modsToLoad = initSet[string] 16
   for src in srcs:
     var deps = getModDependencies(src)
     if deps.len > 0:

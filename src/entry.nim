@@ -1,16 +1,3 @@
-const doc = """
-Minecraft Bedrock Server Launcher
-
-Usage:
-  ./bedrockserver [<profile>]
-  ./bedrockserver -h | --help
-  ./bedrockserver --version
-
-Options:
-  -h --help             Show this screen
-  --version             Show version
-"""
-
 import os, parsecfg, ospaths, sequtils
 
 import logger, hybris, stubs, cppstring, HookManager, CrashHandler, ModLoader
@@ -21,6 +8,7 @@ var modified = false
 
 proc run() =
   setControlCHook do:
+    writeStackTrace()
     stdin.close()
   notice "Bedrock Server Loading..."
   let mcpePath = getAppDir() / "data/libs/libminecraftpe.so"

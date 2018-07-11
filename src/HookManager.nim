@@ -60,6 +60,7 @@ proc patchSection(base: Elf32_Addr, offset: Elf32_Off, size: Elf32_Word, sym, ov
     if xaddr[] == sym:
       xaddr[] = override
       return true
+    address += (uint32)(sizeof int)
   return false
 
 proc patchLibrary(lib, sym, override: pointer): bool =
@@ -111,11 +112,11 @@ proc hookFunctionImpl(symbol, hook: pointer, orig: ptr pointer): int =
 
 proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int
   {.exportc:exp"hookFunction", cdecl, dynlib.} =
-  if hook in hookChain:
-    let def = hookChain[hook]
-    orig[] = def.origin
+  if symbol in hookChain:
+    let def = hookChain[symbol]
+    orig[] = def.origin[]
     def.origin[] = hook
-    hookChain[hook] = HookDef(hook: hook, origin: orig, ret: def.ret)
+    hookChain[symbol] = HookDef(hook: hook, origin: orig, ret: def.ret)
   else:
     let ret = hookFunctionImpl(symbol, hook, orig)
-    hookChain[hook] = HookDef(hook: hook, origin: orig, ret: ret)
+    hookChain[symbol] = HookDef(hook: hook, origin: orig, ret: ret)
