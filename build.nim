@@ -65,17 +65,6 @@ target "bin" / "bedrockserver":
     mkdir "bin"
     exec &"nim cpp -o:{target} {Options} {main}"
 
-target "bridge" / "refs" / "minecraft-symbols" / ".target":
-  dep: ["bridge" / "patch" / "minecraft-symbols" & ".sh"]
-  clean:
-    rm target.parentDir
-  receipt:
-    withDir target.parentDir.parentDir:
-      let reference = target.parentDir.splitPath[1]
-      exec &"git -C {reference} pull || git clone https://github.com/minecraft-linux/{reference} --depth 1 {reference}"
-      withDir reference:
-        exec &"bash ../../patch/{reference}.sh"
-
 let
   cpp = getEnv("CPP", "i686-linux-android-g++")
 
@@ -91,7 +80,6 @@ const BridgeCOptions = [
 target "bin" / "bridge.so":
   depIt: walkDirRec "bridge" / "src"
   depIt: walkDirRec "bridge" / "include"
-  dep: ["bridge" / "refs" / "minecraft-symbols" / ".target"]
   dep: toSeq(walkDirRec "bridge" / "refs").filterIt(".git" notin it).filterIt("darwin" notin it)
   receipt:
     let allsrc = deps.filterIt(it.endsWith ".cpp").join " "

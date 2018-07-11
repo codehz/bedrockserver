@@ -1,3 +1,6 @@
 [submodule "libhybris"]
 	path = libhybris
 	url = https://github.com/codehz/libhybris
+[submodule "bridge/refs/minecraft-symbols"]
+	path = bridge/refs/minecraft-symbols
+	url = https://github.com/codehz/minecraft-symbols

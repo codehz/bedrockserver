@@ -6,4 +6,3 @@ lib
 nimcache
 *.so
 temp
-refs
