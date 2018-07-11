@@ -4,7 +4,6 @@ FROM nimlang/nim as BUILDER
 COPY --from=SDK /data /data
 RUN apt-get install -y cmake g++-multilib
 RUN nimble install -y https://github.com/codehz/nimake
-RUN nimble install docopt
 COPY . /build
 WORKDIR /build
 RUN echo i386.android.gcc.cpp.exe = \\"/data/bin/i686-linux-android-g++\\" >> /etc/nim.cfg && \

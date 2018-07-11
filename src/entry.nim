@@ -12,7 +12,6 @@ Options:
 """
 
 import os, parsecfg, ospaths, sequtils
-import docopt
 
 import logger, hybris, stubs, cppstring, HookManager, CrashHandler, ModLoader
 
@@ -72,10 +71,9 @@ proc run() =
     dict.writeConfig configfile
 
 when isMainModule:
-  let args = docopt(doc, version = "0.0.1")
   var profile = "default"
-  if args["<profile>"]:
-    profile = $args["<profile>"]
+  if paramCount() > 0:
+    profile = paramStr(1)
   configfile = profile & ".cfg"
   if not existsFile configfile:
     warn "Config file is not exists"
