@@ -71,6 +71,5 @@ proc loadAll*(srcs: seq[string]) =
       modsToLoad.incl src
   let count = modsToLoad.len
   for m in modsToLoad:
-    modsToLoad.excl m
     loadMulti m, modsToLoad
   info "ModLoader: Loaded ", count, " Mod"
