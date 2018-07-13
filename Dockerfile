@@ -2,8 +2,9 @@ FROM codehz/mcpe-sdk as SDK
 FROM codehz/mcpe-prebuilt as PREBUILT
 FROM nimlang/nim as BUILDER
 COPY --from=SDK /data /data
-RUN apt-get install -y cmake g++-multilib
-RUN nimble install -y https://github.com/codehz/nimake
+RUN apt-get update && \
+  apt-get install -y cmake g++-multilib && \
+  nimble install -y https://github.com/codehz/nimake
 COPY . /build
 WORKDIR /build
 RUN echo i386.android.gcc.cpp.exe = \\"/data/bin/i686-linux-android-g++\\" >> /etc/nim.cfg && \
