@@ -9,7 +9,7 @@ proc run() =
   setControlCHook do:
     writeStackTrace()
     stdin.close()
-  notice "Bedrock Server Loading..."
+  notice "Loading Bedrock Server..."
   let mcpePath = getCurrentDir() / "data/libs/libminecraftpe.so"
   let handle = dlopen(mcpePath)
   let debugLog = cast[ptr pointer](dlsym(handle, "_ZN6RakNet19rakDebugLogCallbackE"))
@@ -17,9 +17,13 @@ proc run() =
   if not handle.isValid:
     fatalQ $hybris.dlerror()
   addHookLibrary (pointer)handle, mcpePath
-  notice "Core Loaded"
   postInit(handle)
   cppstring.init(handle)
+
+  notice "Loading Sqlite..."
+  let sqlite = dlopen(getAppDir() / "libsqliteX.so")
+  if not sqlite.isValid:
+    fatalQ $hybris.dlerror()
 
   proc read_property(name: cstring, value: cstring): cstring {.cdecl.} =
     try:
@@ -69,10 +73,10 @@ proc run() =
   shallow mods
   loadAll mods
 
+  notice "Loading Bridge..."
   let bridge = dlopen(getAppDir() / "bridge.so")
   if not bridge.isValid:
     fatalQ $hybris.dlerror()
-  notice "Bridge Loaded"
   let bridge_version = cast[proc(): cstring {.cdecl.}](bridge.dlsym("bridge_version"))
   info "Bridge Version: ", bridge_version()
   let bridge_init = cast[proc(lib: Handle) {.cdecl.}](bridge.dlsym("bridge_init"))

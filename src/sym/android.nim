@@ -43,4 +43,5 @@ const syms* = [
   "__android_log_print",
   "__android_log_vprint",
   "__android_log_write",
+  "__assert2",
 ]

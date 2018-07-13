@@ -225,5 +225,10 @@ const syms* = [
   "statvfs",
   "sysinfo",
   "getpwuid_r",
-  "sigemptyset"
+  "sigemptyset",
+  "lseek64",
+  "utimes",
+  "mremap",
+  "lstat",
+  "memalign",
 ]
