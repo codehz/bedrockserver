@@ -63,8 +63,9 @@ when isMainModule:
   if paramCount() > 0:
     profile = paramStr(1)
   configfile = profile & ".cfg"
+  info "Loading profile: " & profile
   if not existsFile configfile:
-    warn "Config file is not exists"
+    warn "Config file is not exists, creating..."
     dict = newConfig()
   else:
     dict = loadConfig configfile
