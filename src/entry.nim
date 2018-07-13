@@ -4,7 +4,6 @@ import logger, hybris, stubs, cppstring, HookManager, CrashHandler, ModLoader
 
 var configfile = ""
 var dict: Config
-var modified = false
 
 proc run() =
   setControlCHook do:
@@ -27,7 +26,7 @@ proc run() =
       let ret = dict.getSectionValue("", $name)
       if ret == "":
         dict.setSectionKey("", $name, $value)
-        modified = true
+        dict.writeConfig configfile
         return value
       return ret
     except:
@@ -35,7 +34,7 @@ proc run() =
   proc write_property(name: cstring, value: cstring) {.cdecl.} =
     try:
       dict.setSectionKey("", $name, $value)
-      modified = true
+      dict.writeConfig configfile
     except:
       fatalQ getCurrentExceptionMsg()
   proc read_property_group(group: cstring, name: cstring, value: cstring): cstring {.cdecl.} =
@@ -43,7 +42,7 @@ proc run() =
       let ret = dict.getSectionValue($group, $name)
       if ret == "":
         dict.setSectionKey("", $name, $value)
-        modified = true
+        dict.writeConfig configfile
         return value
       return ret
     except:
@@ -51,7 +50,7 @@ proc run() =
   proc write_property_group(group: cstring, name: cstring, value: cstring) {.cdecl.} =
     try:
       dict.setSectionKey($group, $name, $value)
-      modified = true
+      dict.writeConfig configfile
     except:
       fatalQ getCurrentExceptionMsg()
 
@@ -79,9 +78,6 @@ proc run() =
   let bridge_init = cast[proc(lib: Handle) {.cdecl.}](bridge.dlsym("bridge_init"))
 
   bridge_init handle
-
-  if modified:
-    dict.writeConfig configfile
 
 when isMainModule:
   var profile = "default"
