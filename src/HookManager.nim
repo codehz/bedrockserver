@@ -117,6 +117,8 @@ proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int
     orig[] = def.origin[]
     def.origin[] = hook
     hookChain[symbol] = HookDef(hook: hook, origin: orig, ret: def.ret)
+    return def.ret
   else:
     let ret = hookFunctionImpl(symbol, hook, orig)
     hookChain[symbol] = HookDef(hook: hook, origin: orig, ret: ret)
+    return ret
