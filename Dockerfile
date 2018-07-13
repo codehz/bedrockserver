@@ -1,5 +1,5 @@
 FROM codehz/mcpe-sdk as SDK
-FROM codehz/prebuilt as PREBUILT
+FROM codehz/mcpe-prebuilt as PREBUILT
 FROM nimlang/nim as BUILDER
 COPY --from=SDK /data /data
 RUN apt-get install -y cmake g++-multilib
