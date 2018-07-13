@@ -38,9 +38,27 @@ proc run() =
       modified = true
     except:
       fatalQ getCurrentExceptionMsg()
+  proc read_property_group(group: cstring, name: cstring, value: cstring): cstring {.cdecl.} =
+    try:
+      let ret = dict.getSectionValue($group, $name)
+      if ret == "":
+        dict.setSectionKey("", $name, $value)
+        modified = true
+        return value
+      return ret
+    except:
+      fatalQ getCurrentExceptionMsg()
+  proc write_property_group(group: cstring, name: cstring, value: cstring) {.cdecl.} =
+    try:
+      dict.setSectionKey($group, $name, $value)
+      modified = true
+    except:
+      fatalQ getCurrentExceptionMsg()
 
   hook "mcpelauncher_property_get", read_property
   hook "mcpelauncher_property_set", write_property
+  hook "mcpelauncher_property_get_group", read_property_group
+  hook "mcpelauncher_property_set_group", write_property_group
   hook "mcpelauncher_hook", hookFunction
 
   var world = dict.getSectionValue("", "level-dir")
