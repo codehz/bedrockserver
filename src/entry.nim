@@ -32,8 +32,15 @@ proc run() =
       return ret
     except:
       fatalQ getCurrentExceptionMsg()
+  proc write_property(name: cstring, value: cstring) {.cdecl.} =
+    try:
+      dict.setSectionKey("", $name, $value)
+      modified = true
+    except:
+      fatalQ getCurrentExceptionMsg()
 
   hook "mcpelauncher_property_get", read_property
+  hook "mcpelauncher_property_set", write_property
   hook "mcpelauncher_hook", hookFunction
 
   var world = dict.getSectionValue("", "level-dir")
