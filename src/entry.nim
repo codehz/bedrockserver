@@ -10,7 +10,7 @@ proc run() =
     writeStackTrace()
     stdin.close()
   notice "Bedrock Server Loading..."
-  let mcpePath = getAppDir() / "data/libs/libminecraftpe.so"
+  let mcpePath = getCurrentDir() / "data/libs/libminecraftpe.so"
   let handle = dlopen(mcpePath)
   let debugLog = cast[ptr pointer](dlsym(handle, "_ZN6RakNet19rakDebugLogCallbackE"))
   debugLog[] = nil
@@ -64,8 +64,8 @@ proc run() =
   if world == "": world = "world"
   shallow world
 
-  var mods = toSeq(walkPattern(getAppDir() / "user" / "mods" / "*.so"))
-  mods.add toSeq(walkPattern(getAppDir() / "worlds" / dict.getSectionValue("", "level-dir") / "mods" / "*.so"))
+  var mods = toSeq(walkPattern(getCurrentDir() / "user" / "mods" / "*.so"))
+  mods.add toSeq(walkPattern(getCurrentDir() / "worlds" / dict.getSectionValue("", "level-dir") / "mods" / "*.so"))
   shallow mods
   loadAll mods
 
