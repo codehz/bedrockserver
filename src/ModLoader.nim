@@ -73,3 +73,7 @@ proc loadAll*(srcs: seq[string]) =
   for m in modsToLoad:
     loadMulti m, modsToLoad
   info "ModLoader: Loaded ", count, " Mod"
+  for val in mods.values:
+    let exec = cast[proc () {.cdecl.}](val.dlsym "mod_exec")
+    if exec != nil:
+      exec()
