@@ -134,6 +134,8 @@ extern "C" void bridge_init(void *handle)
   std::string line;
   while (reader.read(line))
   {
+    if (line.empty())
+      continue;
     instance.queueForServerThread([&instance, line]() {
       std::unique_ptr<DedicatedServerCommandOrigin> commandOrigin(new DedicatedServerCommandOrigin("Server", *instance.minecraft));
       instance.minecraft->getCommands()->requestCommandExecution(std::move(commandOrigin), line, 4, true);
