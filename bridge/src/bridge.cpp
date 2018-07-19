@@ -146,5 +146,7 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *))
   Log::info("Bridge", "Stopping...");
   instance.leaveGameSync();
 
+  _exit(0);
+
   MinecraftUtils::workaroundShutdownCrash(handle);
 }
