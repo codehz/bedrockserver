@@ -1,5 +1,4 @@
 FROM codehz/mcpe-sdk as SDK
-FROM codehz/mcpe-prebuilt as PREBUILT
 FROM nimlang/nim as BUILDER
 COPY --from=SDK /data /data
 RUN apt-get update && \
@@ -12,7 +11,6 @@ RUN echo i386.android.gcc.cpp.exe = \\"/data/bin/i686-linux-android-g++\\" >> /e
   mkdir bin && \
   PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 1 && \
   cp /build/LICENSE /build/bin/LICENSE
-COPY --from=PREBUILT / /build/bin
 
 FROM scratch
 COPY --from=BUILDER /build/bin/* /
