@@ -77,3 +77,9 @@ proc loadAll*(srcs: seq[string]) =
     let exec = cast[proc () {.cdecl.}](val.dlsym "mod_exec")
     if exec != nil:
       exec()
+
+proc notify*(srv: pointer) {.cdecl.} =
+  for val in mods.values:
+    let set_server = cast[proc (srv: pointer) {.cdecl.}](val.dlsym "mod_set_server")
+    if set_server != nil:
+      set_server(srv)

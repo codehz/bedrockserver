@@ -79,9 +79,9 @@ proc run() =
     fatalQ $hybris.dlerror()
   let bridge_version = cast[proc(): cstring {.cdecl.}](bridge.dlsym("bridge_version"))
   info "Bridge Version: ", bridge_version()
-  let bridge_init = cast[proc(lib: Handle) {.cdecl.}](bridge.dlsym("bridge_init"))
+  let bridge_init = cast[proc(lib: Handle, srvcb: proc(srv: pointer) {.cdecl.}) {.cdecl.}](bridge.dlsym("bridge_init"))
 
-  bridge_init handle
+  bridge_init(handle, notify)
 
 when isMainModule:
   var profile = "default"

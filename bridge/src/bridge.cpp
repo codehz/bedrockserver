@@ -36,7 +36,7 @@ extern "C" const char *bridge_version()
 
 static void empty() {}
 
-extern "C" void bridge_init(void *handle)
+extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *))
 {
   MinecraftUtils::workaroundLocaleBug();
   MinecraftUtils::setupForHeadless();
@@ -126,6 +126,7 @@ extern "C" void bridge_init(void *handle)
   I18n::loadLanguages(*resourcePackManager, "en_US");
   resourcePackManager->onLanguageChanged();
   Log::info("Bridge", "Server initialized");
+  notify(&instance);
   instance.startServerThread();
 
   ConsoleReader reader;
