@@ -5,8 +5,12 @@ import logger, hybris, stubs, cppstring, HookManager, CrashHandler, ModLoader
 var configfile = ""
 var dict: Config
 
+var firstCrash = true;
+
 proc run() =
   setControlCHook do:
+    if not firstCrash:
+      quit 1
     writeStackTrace()
     stdin.close()
   notice "Loading Bedrock Server..."

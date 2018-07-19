@@ -14,7 +14,7 @@ proc demangle(name: cstring, outp: pointer, len: ptr int, status: ptr int): poin
 
 proc handleSignal(signal: cint, aptr: pointer) {.noconv.} =
   fatal "Signal ", signal, " received"
-  if hasCrashed: return
+  if hasCrashed: exitnow 1
   hasCrashed = true
   var xptr = aptr.unsafeAddr
   var arr: array[25, pointer]
