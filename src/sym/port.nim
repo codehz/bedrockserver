@@ -231,4 +231,6 @@ const syms* = [
   "mremap",
   "lstat",
   "memalign",
+  "ftruncate64",
+  "mmap64",
 ]
