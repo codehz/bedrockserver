@@ -4,10 +4,14 @@ type Level* = enum
   TRACE, DEBUG, INFO, NOTICE, WARN, ERROR, FATAL
 
 const table = ['T', 'D', 'I', 'N', 'W', 'E', 'F']
+var logfn*: proc(level: Level, tag: cstring, data: cstring) {.cdecl.}
 
 proc log*(level: Level, tag: string, data: varargs[string, `$`]) =
   let ch = $table[(int)level]
-  echo fmt"{ch} [{tag}] {data.join()}"
+  let jd = data.join();
+  echo fmt"{ch} [{tag}] {jd}"
+  if logfn != nil:
+    logfn(level, tag, jd);
   discard
 
 

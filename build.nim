@@ -67,7 +67,7 @@ target "bin" / "bedrockserver":
 
 let
   cpp = getEnv("CPP", "i686-linux-android-g++")
-  cc = getEnv("CC", "i686-linux-android-gcc")
+  cc = getEnv("GCC", "i686-linux-android-gcc")
 
 const BridgeCPPOptions = [
   "-std=c++14",

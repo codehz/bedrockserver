@@ -2,10 +2,50 @@ import os, parsecfg, ospaths, sequtils
 
 import logger, hybris, stubs, cppstring, HookManager, CrashHandler, ModLoader
 
+var profile = "default"
 var configfile = ""
 var dict: Config
 
-var firstCrash = true;
+var firstCrash = true
+
+proc read_property(name: cstring, value: cstring): cstring {.cdecl.} =
+  try:
+    let ret = dict.getSectionValue("", $name)
+    if ret == "":
+      dict.setSectionKey("", $name, $value)
+      dict.writeConfig configfile
+      return value
+    return ret
+  except:
+    fatalQ "core", getCurrentExceptionMsg()
+proc write_property(name: cstring, value: cstring) {.cdecl.} =
+  try:
+    dict.setSectionKey("", $name, $value)
+    dict.writeConfig configfile
+  except:
+    fatalQ "core", getCurrentExceptionMsg()
+proc read_property_group(group: cstring, name: cstring, value: cstring): cstring {.cdecl.} =
+  try:
+    let ret = dict.getSectionValue($group, $name)
+    if ret == "":
+      dict.setSectionKey("", $name, $value)
+      dict.writeConfig configfile
+      return value
+    return ret
+  except:
+    fatalQ "core", getCurrentExceptionMsg()
+proc write_property_group(group: cstring, name: cstring, value: cstring) {.cdecl.} =
+  try:
+    dict.setSectionKey($group, $name, $value)
+    dict.writeConfig configfile
+  except:
+    fatalQ "core", getCurrentExceptionMsg()
+
+hook "mcpelauncher_property_get", read_property
+hook "mcpelauncher_property_set", write_property
+hook "mcpelauncher_property_get_group", read_property_group
+hook "mcpelauncher_property_set_group", write_property_group
+hook "mcpelauncher_hook", hookFunction
 
 proc run() =
   setControlCHook do:
@@ -13,6 +53,16 @@ proc run() =
       quit 1
     writeStackTrace()
     stdin.close()
+
+  notice "core", "Loading Bridge..."
+  let bridge = dlopen(getAppDir() / "bridge.so")
+  if not bridge.isValid:
+    fatalQ "core", $hybris.dlerror()
+  let bridge_version = cast[proc(): cstring {.cdecl.}](bridge.dlsym("bridge_version"))
+  info "core", "Bridge Version: ", bridge_version()
+  cast[proc(name: cstring) {.cdecl.}](bridge.dlsym("openDB"))(profile & ".db")
+  logfn = cast[proc(level: Level, tag: cstring, data: cstring) {.cdecl.}](bridge.dlsym("writeLog"))
+
   notice "core", "Loading Bedrock Server..."
   let mcpePath = getCurrentDir() / "data/libs/libminecraftpe.so"
   let handle = dlopen(mcpePath)
@@ -24,60 +74,9 @@ proc run() =
   postInit(handle)
   cppstring.init(handle)
 
-  notice "core", "Loading Sqlite..."
-  let sqlite = dlopen(getAppDir() / "libsqliteX.so")
-  if not sqlite.isValid:
-    fatalQ "core", hybris.dlerror()
-
-  proc read_property(name: cstring, value: cstring): cstring {.cdecl.} =
-    try:
-      let ret = dict.getSectionValue("", $name)
-      if ret == "":
-        dict.setSectionKey("", $name, $value)
-        dict.writeConfig configfile
-        return value
-      return ret
-    except:
-      fatalQ "core", getCurrentExceptionMsg()
-  proc write_property(name: cstring, value: cstring) {.cdecl.} =
-    try:
-      dict.setSectionKey("", $name, $value)
-      dict.writeConfig configfile
-    except:
-      fatalQ "core", getCurrentExceptionMsg()
-  proc read_property_group(group: cstring, name: cstring, value: cstring): cstring {.cdecl.} =
-    try:
-      let ret = dict.getSectionValue($group, $name)
-      if ret == "":
-        dict.setSectionKey("", $name, $value)
-        dict.writeConfig configfile
-        return value
-      return ret
-    except:
-      fatalQ "core", getCurrentExceptionMsg()
-  proc write_property_group(group: cstring, name: cstring, value: cstring) {.cdecl.} =
-    try:
-      dict.setSectionKey($group, $name, $value)
-      dict.writeConfig configfile
-    except:
-      fatalQ "core", getCurrentExceptionMsg()
-
-  hook "mcpelauncher_property_get", read_property
-  hook "mcpelauncher_property_set", write_property
-  hook "mcpelauncher_property_get_group", read_property_group
-  hook "mcpelauncher_property_set_group", write_property_group
-  hook "mcpelauncher_hook", hookFunction
-
   var world = dict.getSectionValue("", "level-dir")
   if world == "": world = "world"
   shallow world
-
-  notice "core", "Loading Bridge..."
-  let bridge = dlopen(getAppDir() / "bridge.so")
-  if not bridge.isValid:
-    fatalQ "core", $hybris.dlerror()
-  let bridge_version = cast[proc(): cstring {.cdecl.}](bridge.dlsym("bridge_version"))
-  info "core", "Bridge Version: ", bridge_version()
 
   var mods = toSeq(walkPattern(getCurrentDir() / "user" / "mods" / "*.so"))
   mods.add toSeq(walkPattern(getCurrentDir() / "worlds" / dict.getSectionValue("", "level-dir") / "mods" / "*.so"))
@@ -89,7 +88,6 @@ proc run() =
   bridge_init(handle, notify)
 
 when isMainModule:
-  var profile = "default"
   if paramCount() > 0:
     profile = paramStr(1)
   configfile = profile & ".cfg"
