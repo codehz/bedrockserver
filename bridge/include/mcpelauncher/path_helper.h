@@ -21,26 +21,26 @@ public:
 
   static std::string getPrimaryDataDirectory()
   {
-    return getWorkingDir() + "/data";
+    return getWorkingDir() + "data";
   }
 
   static std::string getSecondaryDataDirectory()
   {
-    return getWorkingDir() + "/user";
+    return getWorkingDir() + "user";
   }
 
   static std::string getCacheDirectory()
   {
-    return getWorkingDir() + "/cache";
+    return getWorkingDir() + "cache";
   }
 
   static std::string getUserDirectory()
   {
-    return getWorkingDir() + "/user";
+    return getWorkingDir() + "user";
   }
 
   static std::string getWorldsDirectory()
   {
-    return getWorkingDir() + "/worlds";
+    return getWorkingDir() + "worlds";
   }
 };
