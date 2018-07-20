@@ -88,7 +88,7 @@ proc addHookLibrary*(p: pointer, pathC: cstring)
     if entry.sh_type == SHT_STRTAB:
       strtab = cast[ByteAddress](file.mem) + (int)entry.sh_offset
   if strtab == 0:
-    fatalQ "addHookLibrary: couldn't find strtab"
+    fatalQ "addHookLibrary", "couldn't find strtab"
   var hi = HookInfo(hookSections: newSeqOfCap[HookSection]((int)header.e_shnum))
   for i in 0..<(int)header.e_shnum:
     let entry = cast[ptr Elf32_Shdr](shdr + (int)(header.e_shentsize) * i)
@@ -108,7 +108,7 @@ proc hookFunctionImpl(symbol, hook: pointer, orig: ptr pointer): int =
     if patchLibrary(lib, symbol, hook):
       result = 1
   if result == 0:
-    error "Failed to hook a symbol: " & $cast[ByteAddress](symbol)
+    error "HookManager","Failed to hook a symbol: " & $cast[ByteAddress](symbol)
 
 proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int
   {.exportc:exp"hookFunction", cdecl, dynlib.} =

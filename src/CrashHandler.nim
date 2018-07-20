@@ -13,7 +13,7 @@ proc dladdr(address: pointer, info: ptr DLInfo): bool {.importcpp:"hybris_dladdr
 proc demangle(name: cstring, outp: pointer, len: ptr int, status: ptr int): pointer {.importcpp:"abi::__cxa_demangle(@)", header:"<cxxabi.h>".}
 
 proc handleSignal(signal: cint, aptr: pointer) {.noconv.} =
-  fatal "Signal ", signal, " received"
+  fatal "dumper", "Signal ", signal, " received"
   if hasCrashed: exitnow 1
   hasCrashed = true
   var xptr = aptr.unsafeAddr
@@ -22,12 +22,12 @@ proc handleSignal(signal: cint, aptr: pointer) {.noconv.} =
   let symbols = backtrace_symbols(arr.addr, count)
   var nameBuf = cast[ptr array[256, char]](alloc0(256))
   var nameBufLen = 256
-  fatal "Backtrace Count: ", count
+  fatal "dumper", "Backtrace Count: ", count
   for i in 0..<count:
     let item = cast[uint](arr[i])
     let sym = symbols[i]
     if sym == nil:
-      fatal fmt"#{i} UNK [0x{item:#08x}]"
+      fatal "dumper", fmt"#{i} UNK [0x{item:#08x}]"
       continue
     if sym[0] == '[':
       var symInfo: DLInfo
@@ -38,10 +38,10 @@ proc handleSignal(signal: cint, aptr: pointer) {.noconv.} =
         let fname = symInfo.dli_fname
         let soff = item - cast[uint](symInfo.dli_saddr)
         let boff = item - cast[uint](symInfo.dli_fbase)
-        fatal fmt"#{i} HYB {dname}+{soff:#04x} {fname}+{boff:#04x} [{item:#04x}]"
+        fatal "dumper", fmt"#{i} HYB {dname}+{soff:#04x} {fname}+{boff:#04x} [{item:#04x}]"
         continue
-    fatal fmt"#{i} {sym}"
-  fatal "Dumping stack..."
+    fatal "dumper", fmt"#{i} {sym}"
+  fatal "dumper", "Dumping stack..."
   for i in 0..<1000:
     let pptr = xptr[]
     let item = cast[uint](pptr)
@@ -53,9 +53,9 @@ proc handleSignal(signal: cint, aptr: pointer) {.noconv.} =
       let fname = symInfo.dli_fname
       let soff = item - cast[uint](symInfo.dli_saddr)
       let boff = item - cast[uint](symInfo.dli_fbase)
-      fatal fmt"#{i} HYB {dname}+{soff:#04x} {fname}+{boff:#04x} [{item:#04x}]"
+      fatal "dumper", fmt"#{i} HYB {dname}+{soff:#04x} {fname}+{boff:#04x} [{item:#04x}]"
     xptr = xptr + 4
-  fatal "Quiting..."
+  fatal "dumper", "Quiting..."
   quit 1
 
 var sig = Sigaction(

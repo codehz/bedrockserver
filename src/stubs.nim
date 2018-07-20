@@ -28,7 +28,8 @@ macro stubAll(arr: static[openarray[string]]): untyped =
         nnkStmtList.newTree(
           nnkCommand.newTree(
             newIdentNode("warn"),
-            newLit("[STUB] " & itemname)
+            newLit("STUB"),
+            newLit(itemname)
           )
         )
       ),

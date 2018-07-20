@@ -1,8 +1,5 @@
 {.passL:"-lhybris".}
 
-when defined(bridge):
-  error "Cannot use it in bridge"
-
 import tables, macros
 
 type
@@ -37,10 +34,10 @@ proc register*(sym: string, variable: ptr pointer) =
 
 template postInit*(mc: Handle) =
   for key, variable in registry.mpairs():
-    debug "LOAD SYMBOL" & key
+    debug "hybris", "LOAD SYMBOL", key
     let sym = dlsym(mc, key)
     if sym.isNil:
-      fatalQ "Failed to load symbol: " & key
+      fatalQ "hybris", "Failed to load symbol: ", key
     variable = sym
 
 macro importmc*(sym: static[string], body: untyped): untyped =

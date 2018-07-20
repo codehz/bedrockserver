@@ -1,19 +1,27 @@
-import logging
-export logging
+import strformat, strutils
 
-template fatalQ*(str: string) =
-  fatal str
+type Level* = enum
+  TRACE, DEBUG, INFO, NOTICE, WARN, ERROR, FATAL
+
+const table = ['T', 'D', 'I', 'N', 'W', 'E', 'F']
+
+proc log*(level: Level, tag: string, data: varargs[string, `$`]) =
+  let ch = $table[(int)level]
+  echo fmt"{ch} [{tag}] {data.join()}"
+  discard
+
+
+template trace*(tag: string, data: varargs[string, `$`]) = log(TRACE, tag, data)
+template debug*(tag: string, data: varargs[string, `$`]) = log(DEBUG, tag, data)
+template info*(tag: string, data: varargs[string, `$`]) = log(INFO, tag, data)
+template notice*(tag: string, data: varargs[string, `$`]) = log(NOTICE, tag, data)
+template warn*(tag: string, data: varargs[string, `$`]) = log(WARN, tag, data)
+template error*(tag: string, data: varargs[string, `$`]) = log(ERROR, tag, data)
+template fatal*(tag: string, data: varargs[string, `$`]) = log(FATAL, tag, data)
+
+template fatalQ*(tag: string, data: varargs[string, `$`]) =
+  fatal(tag, data)
   quit(1)
 
-when not defined(bridge):
-  import hybris
-  addHandler(newConsoleLogger(lvlAll, "\r$levelid "))
-  hook("mcpelauncher_log", proc(level: Level, str: cstring) {.cdecl.} = log level, str)
-else:
-  import strutils
-  proc mcpelauncher_log(level: Level, str: cstring) {.importc.}
-  type
-    ModLogger = ref object of Logger
-  method log(logger: ModLogger, level: Level, args: varargs[string, `$`]) =
-    mcpelauncher_log(level, args.join(""))
-  addHandler(new ModLogger)
+import hybris
+hook("mcpelauncher_log", proc(level: Level, tag: cstring, str: cstring) {.cdecl.} = log level, $tag, str)

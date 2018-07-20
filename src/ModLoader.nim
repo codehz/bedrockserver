@@ -7,7 +7,7 @@ var mods = initTable[string, Handle] 16
 proc loadMod(path: string): Handle =
   result = dlopen path
   if not result.isValid:
-    error "Failed to load mod ", path, ": ", dlerror()
+    error "ModLoader", "Failed to load mod ", path, ": ", dlerror()
   let initFn = cast[proc () {.cdecl.}](result.dlsym "mod_init")
   if initFn != nil:
     initFn()
@@ -24,7 +24,7 @@ proc getModDependencies(path: string): seq[string] =
     if entry.p_type == PT_DYNAMIC:
       dynEntry = entry
   if dynEntry == nil:
-    error "ModLoader: Couldn't find PT_DYNAMIC"
+    error "ModLoader", "Couldn't find PT_DYNAMIC"
     return @[]
   let dynData = cast[ptr UncheckedArray[Elf32_Dyn]](base + (int)dynEntry.p_offset)
   let dynDataCount = (int)(dynEntry.p_filesz) / sizeof(Elf32_Dyn)
@@ -38,7 +38,7 @@ proc getModDependencies(path: string): seq[string] =
       strsz = cast[int](dynData[i].d_un.d_val)
     else: continue
   if strtab == 0 or strsz == 0:
-    error "ModLoader: Couldn't find strtab"
+    error "ModLoader", "Couldn't find strtab"
     return @[]
   result = newSeqOfCap[string] 8
   for i in 0..<(int)dynDataCount:
@@ -55,7 +55,7 @@ proc loadMulti(file: string, others: var HashSet[string]) =
         others.excl oth
         break
   
-  notice "ModLoader: Loading mod: ", file
+  notice "ModLoader", "Loading mod: ", file
   let handle = loadMod file
   addHookLibrary (pointer)handle, file
   if handle.isValid:
@@ -72,7 +72,7 @@ proc loadAll*(srcs: seq[string]) =
   let count = modsToLoad.len
   for m in modsToLoad:
     loadMulti m, modsToLoad
-  info "ModLoader: Loaded ", count, " Mod"
+  info "ModLoader", "Loaded ", count, " Mod"
   for val in mods.values:
     let exec = cast[proc () {.cdecl.}](val.dlsym "mod_exec")
     if exec != nil:

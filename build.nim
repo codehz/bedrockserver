@@ -67,23 +67,36 @@ target "bin" / "bedrockserver":
 
 let
   cpp = getEnv("CPP", "i686-linux-android-g++")
+  cc = getEnv("CC", "i686-linux-android-gcc")
 
-const BridgeCOptions = [
-  "-shared",
+const BridgeCPPOptions = [
   "-std=c++14",
-  "-Os",
-  "-fPIC",
   "-Ibridge/include",
   "-Ibridge/refs/minecraft-symbols/src"
+].join " "
+const BridgeCOptions = [
+  "-std=c99",
+  "-Ibridge/include",
 ].join " "
 
 target "bin" / "bridge.so":
   depIt: walkDirRec "bridge" / "src"
   depIt: walkDirRec "bridge" / "include"
-  dep: toSeq(walkDirRec "bridge" / "refs").filterIt(".git" notin it).filterIt("darwin" notin it)
+  dep: ["objs" / "sqlite.o"]
+  dep: toSeq(walkDirRec "bridge" / "refs").filterIt(".git" notin it and "darwin" notin it and "sqlite3.c" notin it)
+  clean:
+    rm target
   receipt:
-    let allsrc = deps.filterIt(it.endsWith ".cpp").join " "
-    exec &"{cpp} {BridgeCOptions} -shared -std=c++14 -fPIC -o {target} {allsrc}"
-    exec &"strip {target}"
+    let allcpp = deps.filterIt(it.endsWith(".cpp") or it.endsWith(".o")).join " "
+    exec &"{cpp} {BridgeCPPOptions} -shared -fPIC -o {target} {allcpp}"
+
+target "objs" / "sqlite.o":
+  main = "bridge" / "refs" / "sqlite3.c"
+  clean:
+    rm "objs"
+    rm target
+  receipt:
+    mkdir "objs"
+    exec &"{cc} {BridgeCOptions} -c -o {target} {main}"
 
 handleCLI()
