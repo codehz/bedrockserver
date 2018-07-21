@@ -76,6 +76,7 @@ const BridgeCPPOptions = [
 ].join " "
 const BridgeCOptions = [
   "-std=c99",
+  "-DSQLITE_ENABLE_JSON1",
   "-Ibridge/include",
 ].join " "
 
