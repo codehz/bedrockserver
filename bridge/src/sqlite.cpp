@@ -4,6 +4,10 @@
 static sqlite3 *db;
 static sqlite3_stmt *stmt;
 
+extern "C" sqlite3 *getMasterDB() {
+  return db;
+}
+
 extern "C" void openDB(const char *filename) {
   if (sqlite3_open(filename, &db) != SQLITE_OK) {
     auto msg = sqlite3_errmsg(db);
