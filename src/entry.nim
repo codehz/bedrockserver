@@ -40,11 +40,13 @@ proc write_property_group(group: cstring, name: cstring, value: cstring) {.cdecl
     dict.writeConfig configfile
   except:
     fatalQ "core", getCurrentExceptionMsg()
+proc get_profile(): cstring {.cdecl.} = profile
 
 hook "mcpelauncher_property_get", read_property
 hook "mcpelauncher_property_set", write_property
 hook "mcpelauncher_property_get_group", read_property_group
 hook "mcpelauncher_property_set_group", write_property_group
+hook "mcpelauncher_profile", get_profile
 hook "mcpelauncher_hook", hookFunction
 
 proc run() =
