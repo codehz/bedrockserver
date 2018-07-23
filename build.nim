@@ -77,6 +77,11 @@ const BridgeCPPOptions = [
 const BridgeCOptions = [
   "-std=c99",
   "-DSQLITE_ENABLE_JSON1",
+  "-DSQLITE_ENABLE_RTREE",
+  "-DSQLITE_DEFAULT_MMAP_SIZE=4096",
+  "-DSQLITE_DEFAULT_AUTOVACUUM=1",
+  "-DSQLITE_DEFAULT_SYNCHRONOUS=0",
+  "-DSQLITE_THREADSAFE=0",
   "-Ibridge/include",
 ].join " "
 
