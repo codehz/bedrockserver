@@ -101,7 +101,7 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *))
   stack->add(PackInstance(resourcePackRepo.vanillaPack, -1, false, nullptr), resourcePackRepo, false);
   resourcePackManager->setStack(std::move(stack), (ResourcePackStackType)3, false);
   Log::trace("Bridge", "Adding world resource packs");
-  resourcePackRepo.addWorldResourcePacks(pathmgr.getWorldsPath().std() + props.worldDir.get());
+  resourcePackRepo.addWorldResourcePacks(pathmgr.getWorldsPath().std() + "/" + props.worldDir.get());
   resourcePackRepo.refreshPacks();
   DedicatedServerMinecraftApp minecraftApp;
   Automation::AutomationClient aclient(minecraftApp);
