@@ -46,6 +46,7 @@ proc getModDependencies(path: string): seq[string] =
       result.add $cast[cstring](strtab + (int)dynData[i].d_un.d_val)
 
 proc loadMulti(file: string, others: var HashSet[string]) =
+  others.excl file
   let deps = depCache[file]
   for dep in deps:
     for oth in others:
