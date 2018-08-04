@@ -1,4 +1,4 @@
-import sequtils, tables, memfiles
+import sequtils, tables, memfiles, dynlib
 
 import elf, unsafe, logger
 
@@ -122,3 +122,6 @@ proc hookFunction*(symbol, hook: pointer, orig: ptr pointer): int
     let ret = hookFunctionImpl(symbol, hook, orig)
     hookChain[symbol] = HookDef(hook: hook, origin: orig, ret: ret)
     return ret
+
+proc loadSystemLibrary*(name: cstring): LibHandle = loadLib($name)
+proc getSystemLibrarySymbol*(handle: LibHandle, name: cstring): pointer = handle.symAddr(name)

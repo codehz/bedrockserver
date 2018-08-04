@@ -48,6 +48,8 @@ hook "mcpelauncher_property_get_group", read_property_group
 hook "mcpelauncher_property_set_group", write_property_group
 hook "mcpelauncher_profile", get_profile
 hook "mcpelauncher_hook", hookFunction
+hook "mcpelauncher_sys_dlopen", loadSystemLibrary
+hook "mcpelauncher_sys_dlsym", getSystemLibrarySymbol
 
 proc run() =
   setControlCHook do:
