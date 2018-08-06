@@ -12,4 +12,4 @@ RUN echo >> /etc/nim.cfg && \
   PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 1
 
 FROM archlinux/base
-COPY --from=BUILDER /build/bin/* /usr/bin
+COPY --from=BUILDER /build/bin/* /usr/bin/
