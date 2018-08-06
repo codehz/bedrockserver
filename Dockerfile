@@ -1,17 +1,14 @@
 FROM codehz/mcpe-sdk as SDK
-FROM nimlang/nim as BUILDER
+FROM archlinux/base as BUILDER
 COPY --from=SDK /data /data
-RUN apt-get update && \
-  apt-get install -y cmake g++-multilib && \
+RUN pacman -S nimble base-devel cmake && \
   nimble install -y https://github.com/codehz/nimake
 COPY . /build
 WORKDIR /build
 RUN echo i386.android.gcc.cpp.exe = \\"/data/bin/i686-linux-android-g++\\" >> /etc/nim.cfg && \
   echo i386.android.gcc.cpp.linkerexe = \\"/data/bin/i686-linux-android-g++\\" >> /etc/nim.cfg && \
   mkdir bin && \
-  PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 1 && \
-  cp /build/LICENSE /build/bin/LICENSE && \
-  ldd /build/bin/bedrockserver | cut -d" " -f3 | xargs -I '{}' cp '{}' /build/bin
+  PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 1
 
-FROM scratch
-COPY --from=BUILDER /build/bin/* /
+FROM archlinux/base
+COPY --from=BUILDER /build/bin/* /usr/bin
