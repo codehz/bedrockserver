@@ -6,7 +6,6 @@ const
   COptions = [
     "-m32",
     "-O3",
-    "-fno-rtti",
     "-Ilibhybris/include"
   ].mapIt(&"-t:{it}").join " "
   LinkOptions = [
@@ -14,7 +13,6 @@ const
     "-O3",
     "-flto",
     "-L./lib",
-    "-lrt",
     "-lpthread",
     ].mapIt(&"-l:{it}").join " "
   Options = [
