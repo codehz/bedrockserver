@@ -12,4 +12,5 @@ RUN echo >> /etc/nim.cfg && \
   PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 1
 
 FROM archlinux/base
-COPY --from=BUILDER /build/bin/* /usr/bin/
+RUN pacman -Sy --noconfirm lib32-gcc-libs
+COPY --from=BUILDER /build/bin/bedrockserver /data/bin/
