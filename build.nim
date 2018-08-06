@@ -5,24 +5,17 @@ import nimake, os
 const
   COptions = [
     "-m32",
-    "-Os",
+    "-O3",
     "-fno-rtti",
     "-Ilibhybris/include"
   ].mapIt(&"-t:{it}").join " "
   LinkOptions = [
     "-m32",
-    "-Os",
+    "-O3",
+    "-flto",
     "-L./lib",
-    "-static",
     "-lrt",
     "-lpthread",
-    "-fno-rtti",
-    "-fno-exceptions",
-    "-ffunction-sections",
-    "-fdata-sections",
-    "-Wl,--gc-sections",
-    "-w",
-    "-s"
     ].mapIt(&"-l:{it}").join " "
   Options = [
     COptions,
