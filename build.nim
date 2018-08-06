@@ -13,6 +13,7 @@ const
     "-O3",
     "-flto",
     "-L./lib",
+    "-lrt",
     "-lpthread",
     ].mapIt(&"-l:{it}").join " "
   Options = [
