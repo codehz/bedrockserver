@@ -1,7 +1,7 @@
 FROM codehz/mcpe-sdk as SDK
 FROM archlinux/base as BUILDER
 COPY --from=SDK /data /data
-RUN pacman -Sy --noconfirm nimble base-devel cmake && \
+RUN pacman -Sy --noconfirm nimble base-devel cmake lib32-gcc-libs git && \
   nimble install -y https://github.com/codehz/nimake
 COPY . /build
 WORKDIR /build
