@@ -1,7 +1,7 @@
 FROM codehz/mcpe-sdk as SDK
 FROM archlinux/base as BUILDER
 COPY --from=SDK /data /data
-RUN pacman -S nimble base-devel cmake && \
+RUN pacman -Sy nimble base-devel cmake && \
   nimble install -y https://github.com/codehz/nimake
 COPY . /build
 WORKDIR /build
