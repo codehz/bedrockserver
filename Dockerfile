@@ -5,7 +5,8 @@ RUN pacman -Sy --noconfirm nim nimble base-devel cmake lib32-gcc-libs git && \
   nimble install -y https://github.com/codehz/nimake
 COPY . /build
 WORKDIR /build
-RUN echo i386.android.gcc.cpp.exe = \\"/data/bin/i686-linux-android-g++\\" >> /etc/nim.cfg && \
+RUN echo >> /etc/nim.cfg && \
+  echo i386.android.gcc.cpp.exe = \\"/data/bin/i686-linux-android-g++\\" >> /etc/nim.cfg && \
   echo i386.android.gcc.cpp.linkerexe = \\"/data/bin/i686-linux-android-g++\\" >> /etc/nim.cfg && \
   mkdir bin && \
   PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 1
