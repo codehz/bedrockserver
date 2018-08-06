@@ -11,7 +11,7 @@ RUN echo i386.android.gcc.cpp.exe = \\"/data/bin/i686-linux-android-g++\\" >> /e
   mkdir bin && \
   PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 1 && \
   cp /build/LICENSE /build/bin/LICENSE && \
-  ldd /data/bin/bedrockserver | cut -d" " -f3 | xargs -I '{}' cp '{}' /build/bin
+  ldd /build/bin/bedrockserver | cut -d" " -f3 | xargs -I '{}' cp '{}' /build/bin
 
 FROM scratch
 COPY --from=BUILDER /build/bin/* /
