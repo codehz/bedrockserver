@@ -222,6 +222,9 @@ const syms* = [
   "yn",
   "ynf",
 #MATH END
+  "stderr",
+  "stdout",
+  "stdin",
   "statvfs",
   "sysinfo",
   "getpwuid_r",
