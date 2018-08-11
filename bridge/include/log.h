@@ -12,7 +12,7 @@
     vlog(logLevel, tag, text, args);                       \
     va_end(args);                                          \
   }
-enum class LogLevel
+enum class LogLevel : int
 {
   LOG_TRACE = 0,
   LOG_DEBUG = 1,

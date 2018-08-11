@@ -5,6 +5,7 @@
 #include "launcher_minecraft_api.h"
 #include "server_minecraft_app.h"
 #include "stub_key_provider.h"
+#include "bus.h"
 #include <console.h>
 #include <dlfcn.h>
 #include <mcpelauncher/app_platform.h>
@@ -28,46 +29,13 @@
 #include <minecraft/ServerInstance.h>
 #include <minecraft/Whitelist.h>
 #include <server_properties.h>
-#include <systemd/sd-bus.h>
 #include <thread>
 
-extern "C" const char *bridge_version() { return "0.1.0"; }
+extern "C" const char *bridge_version() { return "0.1.1"; }
 
 static void empty() {}
 
-static bool killed = false;
-
-void dbus_thread() {
-  sd_bus *bus = NULL;
-  sd_bus_slot *slot = NULL;
-  int r = 0;
-  r = sd_bus_open_user(&bus);
-  if (r < 0) {
-    goto dump;
-  }
-  r = sd_bus_request_name(bus, "one.codehz.bedrockserver", 0);
-  if (r < 0) {
-    goto finish;
-  }
-  while (!killed) {
-    r = sd_bus_process(bus, NULL);
-    if (r < 0) {
-      goto finish;
-    }
-    if (r > 0)
-      continue;
-    r = sd_bus_wait(bus, (uint64_t)100000);
-    if (r < 0) {
-      goto finish;
-    }
-  }
-finish:
-  sd_bus_unref(bus);
-dump:
-  if (r < 0) {
-    Log::error("SDBUS", "%s", strerror(-r));
-  }
-}
+bool killed = false;
 
 extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
   std::thread dbus(dbus_thread);
@@ -212,13 +180,11 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
           std::move(commandOrigin), line, 4, true);
     });
   }
+  killed = true;
+  dbus.join();
 
   Log::info("Bridge", "Stopping...");
   instance.leaveGameSync();
-
-  killed = true;
-
-  dbus.join();
 
   MinecraftUtils::workaroundShutdownCrash(handle);
 }
