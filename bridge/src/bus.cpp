@@ -17,7 +17,7 @@ static const sd_bus_vtable core_vtable[] = {
     SD_BUS_SIGNAL("log", "yss", 0), SD_BUS_VTABLE_END};
 
 void dbus_log(int level, const char* tag, const char* data) {
-  if (*(int*)tag == 'DBUS' || !bus)
+  if (strcmp(tag, "DBUS") == 0 || !bus)
     return;
   sd_bus_message* m = NULL;
   int r = sd_bus_message_new_signal(bus, &m, "/bedrockserver/core",
