@@ -32,7 +32,7 @@
 #include "stub_key_provider.h"
 
 extern "C" const char* bridge_version() {
-  return "0.1.1";
+  return "0.1.2";
 }
 
 static void empty() {}
