@@ -1,11 +1,7 @@
-#include <iostream>
 #include <log.h>
 #include <mcpelauncher/minecraft_utils.h>
+#include <iostream>
 // #include <mcpelauncher/crash_handler.h>
-#include "launcher_minecraft_api.h"
-#include "server_minecraft_app.h"
-#include "stub_key_provider.h"
-#include "bus.h"
 #include <console.h>
 #include <dlfcn.h>
 #include <mcpelauncher/app_platform.h>
@@ -30,14 +26,23 @@
 #include <minecraft/Whitelist.h>
 #include <server_properties.h>
 #include <thread>
+#include "bus.h"
+#include "launcher_minecraft_api.h"
+#include "server_minecraft_app.h"
+#include "stub_key_provider.h"
 
-extern "C" const char *bridge_version() { return "0.1.1"; }
+extern "C" const char* bridge_version() {
+  return "0.1.1";
+}
 
 static void empty() {}
 
+std::function<void(std::string, std::function<void(std::string)>)> execCommand;
+std::stringstream cmdss;
+extern "C" void set_record(void (*r)(const char* buf, size_t length));
 bool killed = false;
 
-extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
+extern "C" void bridge_init(void* handle, void (*notify)(ServerInstance*)) {
   std::thread dbus(dbus_thread);
   MinecraftUtils::workaroundLocaleBug();
   MinecraftUtils::setupForHeadless();
@@ -49,8 +54,8 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
             Common::getGameVersionStringNet().c_str());
 
   Log::info("Bridge", "Applying patches");
-  void *ptr = dlsym(handle, "_ZN5Level17_checkUserStorageEv");
-  MinecraftUtils::patchCallInstruction(ptr, (void *)&empty, true);
+  void* ptr = dlsym(handle, "_ZN5Level17_checkUserStorageEv");
+  MinecraftUtils::patchCallInstruction(ptr, (void*)&empty, true);
 
   LauncherAppPlatform::initVtable(handle);
   std::unique_ptr<LauncherAppPlatform> appPlatform(new LauncherAppPlatform());
@@ -98,7 +103,7 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
   eventing.init();
   Log::trace("Bridge", "Initializing ResourcePackManager");
   ContentTierManager ctm;
-  ResourcePackManager *resourcePackManager = new ResourcePackManager(
+  ResourcePackManager* resourcePackManager = new ResourcePackManager(
       [&pathmgr]() { return pathmgr.getRootPath(); }, ctm);
   ResourceLoaders::registerLoader(
       (ResourceFileSystem)0,
@@ -140,9 +145,9 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
   Log::debug("Bridge", "Initializing ServerInstance");
   auto idleTimeout =
       std::chrono::seconds((int)(props.playerIdleTimeout * 60.f));
-  IContentKeyProvider *keyProvider = &stubKeyProvider;
+  IContentKeyProvider* keyProvider = &stubKeyProvider;
   auto createLevelStorageFunc = [&levelStorage, &props,
-                                 keyProvider](Scheduler &scheduler) {
+                                 keyProvider](Scheduler& scheduler) {
     return levelStorage.createLevelStorage(scheduler, props.worldDir.get(),
                                            mcpe::string(), *keyProvider);
   };
@@ -153,10 +158,10 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
       props.onlineMode, {}, "normal", *mce::UUID::EMPTY, eventing,
       resourcePackRepo, ctm, *resourcePackManager, createLevelStorageFunc,
       pathmgr.getWorldsPath(), nullptr, nullptr, nullptr,
-      [](mcpe::string const &s) {
+      [](mcpe::string const& s) {
         Log::debug("Bridge", "Unloading level: %s", s.c_str());
       },
-      [](mcpe::string const &s) {
+      [](mcpe::string const& s) {
         Log::debug("Bridge", "Saving level: %s", s.c_str());
       });
   Log::trace("Bridge", "Loading language data");
@@ -166,20 +171,31 @@ extern "C" void bridge_init(void *handle, void (*notify)(ServerInstance *)) {
   notify(&instance);
   instance.startServerThread();
 
-  ConsoleReader reader;
-  // reader.registerInterruptHandler();
+  set_record([](auto buf, auto size) { cmdss << std::string(buf, size); });
 
+  execCommand = [&](auto line, auto callback) {
+    instance.queueForServerThread([&instance, callback, line]() {
+      std::unique_ptr<DedicatedServerCommandOrigin> commandOrigin(
+          new DedicatedServerCommandOrigin("Server", *instance.minecraft));
+      cmdss.str("");
+      instance.minecraft->getCommands()->requestCommandExecution(
+          std::move(commandOrigin), line, 4, true);
+      auto temp = cmdss.str();
+      temp.pop_back();
+      callback(temp);
+    });
+  };
+
+  ConsoleReader reader;
   std::string line;
   while (reader.read(line)) {
     if (line.empty())
       continue;
-    instance.queueForServerThread([&instance, line]() {
-      std::unique_ptr<DedicatedServerCommandOrigin> commandOrigin(
-          new DedicatedServerCommandOrigin("Server", *instance.minecraft));
-      instance.minecraft->getCommands()->requestCommandExecution(
-          std::move(commandOrigin), line, 4, true);
+    execCommand(line, [](std::string str) {
+      Log::info("OUTPUT", "\n%s", str.c_str());
     });
   }
+
   killed = true;
   dbus.join();
 

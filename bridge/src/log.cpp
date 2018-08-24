@@ -3,6 +3,9 @@
 #include <ctime>
 
 extern "C" void mcpelauncher_log(LogLevel level, const char *tag, const char *data);
+// extern "C" void fake_printf(const char *string, ...) {
+
+// }
 
 void Log::vlog(LogLevel level, const char *tag, const char *text, va_list args)
 {
