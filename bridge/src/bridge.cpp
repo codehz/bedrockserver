@@ -179,6 +179,7 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
   set_record([](auto buf, auto size) { cmdss << std::string(buf, size); });
 
   execCommand = [&](auto line, auto callback) {
+    if (line.size() == 0) return;
     instance.queueForServerThread([&instance, callback, line]() {
       std::unique_ptr<DedicatedServerCommandOrigin> commandOrigin(
           new DedicatedServerCommandOrigin("Server", *instance.minecraft));
@@ -206,11 +207,11 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
 
   sd_notify(0, "STOPPING=1");
 
-  killed = true;
-  dbus.join();
-
   Log::info("Bridge", "Stopping...");
   instance.leaveGameSync();
 
   MinecraftUtils::workaroundShutdownCrash(handle);
+
+  killed = true;
+  dbus.join();
 }

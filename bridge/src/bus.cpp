@@ -26,6 +26,7 @@ static int method_exec(sd_bus_message* m,
   int current_rid = rid++;
   sd_bus_message_read(m, "s", &dat);
   sd_bus_reply_method_return(m, "u", current_rid);
+  if (!execCommand) return 0;
   execCommand(dat, [current_rid](auto data) {
     sd_bus_message* result = NULL;
     int r = sd_bus_message_new_signal(bus, &result, "/", "bedrockserver.core",
