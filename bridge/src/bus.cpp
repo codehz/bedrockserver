@@ -3,6 +3,7 @@
 
 #include <log.h>
 
+extern "C" const char* bridge_version();
 extern std::function<void(std::string, std::function<void(std::string)>)>
     execCommand;
 extern bool killed;
@@ -16,7 +17,7 @@ extern "C" sd_bus* get_dbus() {
 static int method_pong(sd_bus_message* m,
                        void* userdata,
                        sd_bus_error* ret_error) {
-  sd_bus_reply_method_return(m, "s", "pong");
+  sd_bus_reply_method_return(m, "s", bridge_version());
 }
 
 static int method_exec(sd_bus_message* m,

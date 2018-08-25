@@ -32,10 +32,6 @@
 #include "server_minecraft_app.h"
 #include "stub_key_provider.h"
 
-extern "C" const char* bridge_version() {
-  return "0.1.3";
-}
-
 static void empty() {}
 
 std::function<void(std::string, std::function<void(std::string)>)> execCommand;
