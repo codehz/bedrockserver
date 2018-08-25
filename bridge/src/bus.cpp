@@ -6,7 +6,7 @@
 extern std::function<void(std::string, std::function<void(std::string)>)>
     execCommand;
 extern bool killed;
-static sd_bus* bus = NULL;
+extern "C" sd_bus* bus = NULL;
 static unsigned rid = 0;
 
 static int method_pong(sd_bus_message* m,
@@ -54,8 +54,6 @@ void dbus_log(int level, const char* tag, const char* data) {
     goto finish;
   sd_bus_message_append(m, "yss", (int8_t)level, tag, data);
   r = sd_bus_send(bus, m, NULL);
-  if (r < 0)
-    goto finish;
 finish:
   sd_bus_message_unrefp(&m);
   if (r < 0)
