@@ -70,7 +70,7 @@ sd_bus_slot* slot = NULL;
 
 void dbus_init(char* name) {
   int r = 0;
-  r = sd_bus_open_user(&bus);
+  r = sd_bus_open_system(&bus);
   if (r < 0)
     goto dump;
   Log::info("DBUS", "Starting...");
@@ -91,6 +91,7 @@ dump:
   if (r < 0) {
     Log::error("DBUS", "%s", strerror(-r));
   }
+  exit(2);
 }
 
 void dbus_thread() {
