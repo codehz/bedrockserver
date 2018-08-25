@@ -9,9 +9,10 @@ var logfn*: proc(level: Level, tag: cstring, data: cstring) {.cdecl.}
 proc log*(level: Level, tag: string, data: varargs[string, `$`]) =
   let ch = $table[(int)level]
   let jd = data.join();
-  echo fmt"{ch} [{tag}] {jd}"
   if logfn != nil:
     logfn(level, tag, jd);
+  else:
+    echo fmt"{ch} [{tag}] {jd}"
   discard
 
 

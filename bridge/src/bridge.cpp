@@ -1,4 +1,5 @@
 #include <log.h>
+#include <systemd/sd-daemon.h>
 #include <mcpelauncher/minecraft_utils.h>
 #include <iostream>
 // #include <mcpelauncher/crash_handler.h>
@@ -32,7 +33,7 @@
 #include "stub_key_provider.h"
 
 extern "C" const char* bridge_version() {
-  return "0.1.2";
+  return "0.1.3";
 }
 
 static void empty() {}
@@ -42,7 +43,11 @@ std::stringstream cmdss;
 extern "C" void set_record(void (*r)(const char* buf, size_t length));
 bool killed = false;
 
-extern "C" void bridge_init(void* handle, void (*notify)(ServerInstance*)) {
+extern "C" void bridge_init(char *name) { 
+  dbus_init(name);
+}
+
+extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
   std::thread dbus(dbus_thread);
   MinecraftUtils::workaroundLocaleBug();
   MinecraftUtils::setupForHeadless();
@@ -188,6 +193,9 @@ extern "C" void bridge_init(void* handle, void (*notify)(ServerInstance*)) {
 
   ConsoleReader reader;
   std::string line;
+
+  sd_notify(0, "READY=1");
+
   while (reader.read(line)) {
     if (line.empty())
       continue;
@@ -195,6 +203,8 @@ extern "C" void bridge_init(void* handle, void (*notify)(ServerInstance*)) {
       Log::info("OUTPUT", "\n%s", str.c_str());
     });
   }
+
+  sd_notify(0, "STOPPING=1");
 
   killed = true;
   dbus.join();

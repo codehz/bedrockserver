@@ -64,6 +64,7 @@ proc run() =
     fatalQ "core", $hybris.dlerror()
   let bridge_version = cast[proc(): cstring {.cdecl.}](bridge.dlsym("bridge_version"))
   info "core", "Bridge Version: ", bridge_version()
+  cast[proc(name: cstring) {.cdecl.}](bridge.dlsym("bridge_init"))("one.codehz.bedrockserver." & profile)
   cast[proc(name: cstring) {.cdecl.}](bridge.dlsym("openDB"))(profile & ".db")
   logfn = cast[proc(level: Level, tag: cstring, data: cstring) {.cdecl.}](bridge.dlsym("writeLog"))
 
@@ -87,9 +88,9 @@ proc run() =
   shallow mods
   loadAll mods
 
-  let bridge_init = cast[proc(lib: Handle, srvcb: proc(srv: pointer) {.cdecl.}) {.cdecl.}](bridge.dlsym("bridge_init"))
+  let bridge_start = cast[proc(lib: Handle, srvcb: proc(srv: pointer) {.cdecl.}) {.cdecl.}](bridge.dlsym("bridge_start"))
 
-  bridge_init(handle, notify)
+  bridge_start(handle, notify)
 
 when isMainModule:
   if paramCount() > 0:

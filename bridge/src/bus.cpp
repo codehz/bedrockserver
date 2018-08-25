@@ -6,8 +6,12 @@
 extern std::function<void(std::string, std::function<void(std::string)>)>
     execCommand;
 extern bool killed;
-extern "C" sd_bus* bus = NULL;
+static sd_bus* bus = nullptr;
 static unsigned rid = 0;
+
+extern "C" sd_bus* get_dbus() {
+  return bus;
+}
 
 static int method_pong(sd_bus_message* m,
                        void* userdata,
@@ -60,21 +64,35 @@ finish:
     Log::error("DBUS", "%s", strerror(-r));
 }
 
-void dbus_thread() {
-  sd_bus_slot* slot = NULL;
+sd_bus_slot* slot = NULL;
+
+void dbus_init(char* name) {
   int r = 0;
   r = sd_bus_open_user(&bus);
   if (r < 0)
     goto dump;
   Log::info("DBUS", "Starting...");
-  r = sd_bus_request_name(bus, "one.codehz.bedrockserver", 0);
+  r = sd_bus_request_name(bus, name, 0);
   if (r < 0)
     goto finish;
   r = sd_bus_add_object_vtable(bus, &slot, "/", "bedrockserver.core",
                                core_vtable, NULL);
   if (r < 0)
     goto finish;
+  return;
+finish:
+  Log::info("DBUS", "Stoping...");
+  bus = NULL;
+  sd_bus_slot_unref(slot);
+  sd_bus_unref(bus);
+dump:
+  if (r < 0) {
+    Log::error("DBUS", "%s", strerror(-r));
+  }
+}
 
+void dbus_thread() {
+  int r = 0;
   while (!killed) {
     r = sd_bus_process(bus, NULL);
     if (r < 0)
