@@ -182,7 +182,8 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
       instance.minecraft->getCommands()->requestCommandExecution(
           std::move(commandOrigin), line, 4, true);
       auto temp = cmdss.str();
-      temp.pop_back();
+      if (temp.size() > 1)
+        temp.pop_back();
       callback(temp);
     });
   };
