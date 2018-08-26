@@ -44,7 +44,6 @@ extern "C" void bridge_init(char *name) {
 }
 
 extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
-  std::thread dbus(dbus_thread);
   MinecraftUtils::workaroundLocaleBug();
   MinecraftUtils::setupForHeadless();
 
@@ -193,13 +192,7 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
 
   sd_notify(0, "READY=1");
 
-  while (reader.read(line)) {
-    if (line.empty())
-      continue;
-    execCommand(line, [](std::string str) {
-      Log::info("OUTPUT", "\n%s", str.c_str());
-    });
-  }
+  dbus_loop();
 
   sd_notify(0, "STOPPING=1");
 
@@ -208,6 +201,5 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
 
   MinecraftUtils::workaroundShutdownCrash(handle);
 
-  killed = true;
-  dbus.join();
+  dbus_stop();
 }

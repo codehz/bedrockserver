@@ -43,10 +43,19 @@ static int method_exec(sd_bus_message* m,
   });
 }
 
+
+static int method_stop(sd_bus_message* m,
+                       void* userdata,
+                       sd_bus_error* ret_error) {
+  sd_bus_reply_method_return(m, "");
+  killed = true;
+}
+
 static const sd_bus_vtable core_vtable[] = {
     SD_BUS_VTABLE_START(0),
     SD_BUS_METHOD("ping", "", "s", method_pong, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("exec", "s", "u", method_exec, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("stop", "", "", method_stop, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_SIGNAL("exec_result", "us", 0),
     SD_BUS_SIGNAL("log", "yss", 0),
     SD_BUS_VTABLE_END};
@@ -94,26 +103,27 @@ dump:
   exit(2);
 }
 
-void dbus_thread() {
+void dbus_loop() {
   int r = 0;
   while (!killed) {
     r = sd_bus_process(bus, NULL);
     if (r < 0)
-      goto finish;
+      break;
 
     if (r > 0)
       continue;
     r = sd_bus_wait(bus, (uint64_t)100000);
     if (r < 0)
-      goto finish;
+      break;
   }
-finish:
+  if (r < 0) {
+    Log::error("DBUS", "%s", strerror(-r));
+  }
+}
+
+void dbus_stop() {
   Log::info("DBUS", "Stoping...");
   bus = NULL;
   sd_bus_slot_unref(slot);
   sd_bus_unref(bus);
-dump:
-  if (r < 0) {
-    Log::error("DBUS", "%s", strerror(-r));
-  }
 }
