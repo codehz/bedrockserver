@@ -1,4 +1,5 @@
 #include <systemd/sd-bus.h>
+#include <systemd/sd-journal.h>
 #include <functional>
 
 #include <log.h>
@@ -30,7 +31,7 @@ static int method_exec(sd_bus_message* m,
   if (!execCommand) return 0;
   execCommand(dat, [current_rid](auto data) {
     sd_bus_message* result = NULL;
-    int r = sd_bus_message_new_signal(bus, &result, "/", "one.codehz.bedrockserver.core",
+    int r = sd_bus_message_new_signal(bus, &result, "/one/codehz/bedrockserver", "one.codehz.bedrockserver.core",
                                       "exec_result");
     if (r < 0)
       goto finish;
@@ -60,11 +61,22 @@ static const sd_bus_vtable core_vtable[] = {
     SD_BUS_SIGNAL("log", "yss", 0),
     SD_BUS_VTABLE_END};
 
+int priMap[] = {
+  LOG_DEBUG,
+  LOG_DEBUG,
+  LOG_INFO,
+  LOG_NOTICE,
+  LOG_WARNING,
+  LOG_ERR,
+  LOG_EMERG
+};
+
 void dbus_log(int level, const char* tag, const char* data) {
+  sd_journal_print(priMap[level], "[%s] %s", tag, data);
   if (strcmp(tag, "DBUS") == 0 || !bus)
     return;
   sd_bus_message* m = NULL;
-  int r = sd_bus_message_new_signal(bus, &m, "/", "one.codehz.bedrockserver.core", "log");
+  int r = sd_bus_message_new_signal(bus, &m, "/one/codehz/bedrockserver", "one.codehz.bedrockserver.core", "log");
   if (r < 0)
     goto finish;
   sd_bus_message_append(m, "yss", (int8_t)level, tag, data);
@@ -86,7 +98,7 @@ void dbus_init(char* name) {
   r = sd_bus_request_name(bus, name, 0);
   if (r < 0)
     goto finish;
-  r = sd_bus_add_object_vtable(bus, &slot, "/", "one.codehz.bedrockserver.core",
+  r = sd_bus_add_object_vtable(bus, &slot, "/one/codehz/bedrockserver", "one.codehz.bedrockserver.core",
                                core_vtable, NULL);
   if (r < 0)
     goto finish;

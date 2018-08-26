@@ -14,13 +14,13 @@
   }
 enum class LogLevel : int
 {
-  LOG_TRACE = 0,
-  LOG_DEBUG = 1,
-  LOG_INFO = 2,
-  LOG_NOTICE = 3,
-  LOG_WARN = 4,
-  LOG_ERROR = 5,
-  LOG_FATAL = 6,
+  TRACE = 0,
+  DEBUG = 1,
+  INFO = 2,
+  NOTICE = 3,
+  WARN = 4,
+  ERROR = 5,
+  FATAL = 6,
 };
 
 class Log
@@ -29,15 +29,15 @@ class Log
 public:
   static inline const char *getLogLevelString(LogLevel lvl)
   {
-    if (lvl == LogLevel::LOG_TRACE)
+    if (lvl == LogLevel::TRACE)
       return "Trace";
-    if (lvl == LogLevel::LOG_DEBUG)
+    if (lvl == LogLevel::DEBUG)
       return "Debug";
-    if (lvl == LogLevel::LOG_INFO)
+    if (lvl == LogLevel::INFO)
       return "Info";
-    if (lvl == LogLevel::LOG_WARN)
+    if (lvl == LogLevel::WARN)
       return "Warn";
-    if (lvl == LogLevel::LOG_ERROR)
+    if (lvl == LogLevel::ERROR)
       return "Error";
     return "?";
   }
@@ -52,13 +52,13 @@ public:
     va_end(args);
   }
 
-  LogFuncDef(trace, LogLevel::LOG_TRACE)
-  LogFuncDef(debug, LogLevel::LOG_DEBUG)
-  LogFuncDef(info, LogLevel::LOG_INFO)
-  LogFuncDef(notice, LogLevel::LOG_NOTICE)
-  LogFuncDef(warn, LogLevel::LOG_WARN)
-  LogFuncDef(error, LogLevel::LOG_ERROR)
-  LogFuncDef(fatal, LogLevel::LOG_FATAL)
+  LogFuncDef(trace, LogLevel::TRACE)
+  LogFuncDef(debug, LogLevel::DEBUG)
+  LogFuncDef(info, LogLevel::INFO)
+  LogFuncDef(notice, LogLevel::NOTICE)
+  LogFuncDef(warn, LogLevel::WARN)
+  LogFuncDef(error, LogLevel::ERROR)
+  LogFuncDef(fatal, LogLevel::FATAL)
 };
 
 #undef LogFuncDef
