@@ -19,6 +19,10 @@ unsigned int MinecraftUtils::getLibraryBase(void *handle)
   return ((soinfo *)handle)->base;
 }
 
+static void AutomationClientDummySender(void *th, std::string &&result)
+{
+}
+
 void MinecraftUtils::initSymbolBindings(void *handle)
 {
   mcpe::string::empty = (mcpe::string *)dlsym(handle, "_ZN4Util12EMPTY_STRINGE");
@@ -27,6 +31,8 @@ void MinecraftUtils::initSymbolBindings(void *handle)
   patchCallInstruction(patchOff, (void *)&PathHelper::getUserDirectory, true);
   patchOff = (void *)dlsym(handle, "_ZNK15FilePathManager13getWorldsPathEv");
   patchCallInstruction(patchOff, (void *)&PathHelper::getWorldsDirectory, true);
+  patchOff = (void *)dlsym(handle, "_ZN10Automation16AutomationClient4sendERKNS_8ResponseE");
+  patchCallInstruction((void *)patchOff, (void *)&AutomationClientDummySender, true);
 }
 
 static void workerPoolDestroy(void *th)
