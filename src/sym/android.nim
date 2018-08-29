@@ -40,7 +40,7 @@ const syms* = [
   "AAssetManager_openDir",
   "AAssetDir_getNextFileName",
   "AAssetDir_close",
-  "__android_log_print",
+  # "__android_log_print",
   "__android_log_vprint",
   "__android_log_write",
   "__assert2",

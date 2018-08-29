@@ -30,3 +30,5 @@ template fatalQ*(tag: string, data: varargs[string, `$`]) =
 
 import hybris
 hook("mcpelauncher_log", proc(level: Level, tag: cstring, str: cstring) {.cdecl.} = log level, $tag, str)
+# Minecraft only use %s
+hook("__android_log_print", proc(level: Level, tag: cstring, pattern, str: cstring) {.cdecl.} = log level, $tag, strip($str))
