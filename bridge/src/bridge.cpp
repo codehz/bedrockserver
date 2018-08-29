@@ -19,12 +19,13 @@
 #include <minecraft/Minecraft.h>
 #include <minecraft/MinecraftCommands.h>
 #include <minecraft/MinecraftEventing.h>
-#include <minecraft/OpsList.h>
+#include <minecraft/PermissionsMap.h>
 #include <minecraft/ResourcePack.h>
 #include <minecraft/ResourcePackStack.h>
 #include <minecraft/SaveTransactionManager.h>
 #include <minecraft/ServerInstance.h>
 #include <minecraft/Whitelist.h>
+#include <minecraft/ContentIdentity.h>
 #include <server_properties.h>
 #include <thread>
 #include "bus.h"
@@ -65,8 +66,7 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
   ServerProperties props;
 
   Whitelist whitelist;
-  OpsList ops(true);
-  LauncherMinecraftApi api(handle);
+  PermissionsMap permissions(true);
 
   LevelSettings levelSettings;
   levelSettings.seed = LevelSettings::parseSeedString(
@@ -149,11 +149,11 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
   auto createLevelStorageFunc = [&levelStorage, &props,
                                  keyProvider](Scheduler& scheduler) {
     return levelStorage.createLevelStorage(scheduler, props.worldDir.get(),
-                                           mcpe::string(), *keyProvider);
+                                           *ContentIdentity::EMPTY, *keyProvider);
   };
   ServerInstance instance(
-      minecraftApp, whitelist, ops, &pathmgr, idleTimeout, props.worldDir.get(),
-      props.worldName.get(), props.motd.get(), levelSettings, api,
+      minecraftApp, whitelist, permissions, &pathmgr, idleTimeout, props.worldDir.get(),
+      props.worldName.get(), props.motd.get(), levelSettings,
       props.viewDistance, true, props.port, props.portV6, props.maxPlayers,
       props.onlineMode, {}, "normal", *mce::UUID::EMPTY, eventing,
       resourcePackRepo, ctm, *resourcePackManager, createLevelStorageFunc,
