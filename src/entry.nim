@@ -64,6 +64,7 @@ proc run() =
     fatalQ "core", $hybris.dlerror()
   let bridge_version = cast[proc(): cstring {.cdecl.}](bridge.dlsym("bridge_version"))
   info "core", "Bridge Version: ", bridge_version()
+  info "core", "Request DBUS Name: ", "one.codehz.bedrockserver.", profile
   cast[proc(name: cstring) {.cdecl.}](bridge.dlsym("bridge_init"))("one.codehz.bedrockserver." & profile)
   cast[proc(name: cstring) {.cdecl.}](bridge.dlsym("openDB"))(profile & ".db")
   hook "mcpelauncher_get_dbus", bridge.dlsym("get_dbus")
