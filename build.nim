@@ -11,11 +11,21 @@ const
   LinkOptions = [
     "-m32",
     "-O3",
-    "-flto",
+    "-g",
+    # "-flto",
     "-L./lib",
     "-lrt",
     "-lpthread",
-    ].mapIt(&"-l:{it}").join " "
+    "-lsystemd",
+    "-lgmp",
+    "-lffi",
+    "-lunistring",
+    "-lltdl",
+    "-lcrypt",
+    "-L./prebuilt",
+    "-lguile-2.2",
+    "-lgc",
+  ].mapIt(&"-l:{it}").join " "
   Options = [
     COptions,
     LinkOptions,

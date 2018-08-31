@@ -281,5 +281,5 @@ const syms* = [
   "_Unwind_GetIP",
   "tmpfile",
   "vprintf",
-  "environ",
+  "environ"
 ]

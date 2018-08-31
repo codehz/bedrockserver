@@ -10,6 +10,7 @@ import sym.fmod
 import sym.egl
 import sym.port
 import sym.systemd
+import sym.guile
 
 macro stubAll(arr: static[openarray[string]]): untyped =
   result = nnkStmtList.newTree()
@@ -71,16 +72,12 @@ macro genLibrarySym(arr: static[openarray[string]]): untyped =
       )
     )
 
-proc loadSystemLibrary(lib: string, table: openarray[string]) =
-  let lib = loadLib(lib)
-  for sym in table:
-    hook(sym, lib.symAddr(sym))
-
 stubAll(fmod.syms)
 stubAll(android.syms)
 stubAll(egl.syms)
 genLibrarySym(port.syms)
-loadSystemLibrary("libsystemd.so.0", systemd.syms)
+genLibrarySym(systemd.syms)
+genLibrarySym(guile.syms)
 loadEmptyLibrary("libfmod.so")
 loadEmptyLibrary("liblog.so")
 loadEmptyLibrary("libc.so")
