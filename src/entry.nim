@@ -68,6 +68,8 @@ proc run() =
   cast[proc(name: cstring) {.cdecl.}](bridge.dlsym("bridge_init"))("one.codehz.bedrockserver." & profile)
   cast[proc(name: cstring) {.cdecl.}](bridge.dlsym("openDB"))(profile & ".db")
   hook "mcpelauncher_get_dbus", bridge.dlsym("get_dbus")
+  hook "mcpelauncher_exec_command", bridge.dlsym("_exec_command")
+  hook "mcpelauncher_server_thread", bridge.dlsym("_server_thread")
   logfn = cast[proc(level: Level, tag: cstring, data: cstring) {.cdecl.}](bridge.dlsym("writeLog"))
 
   notice "core", "Loading Bedrock Server..."

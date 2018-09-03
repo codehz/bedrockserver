@@ -28,6 +28,7 @@
 #include <minecraft/ContentIdentity.h>
 #include <server_properties.h>
 #include <thread>
+#include <queue>
 #include "bus.h"
 #include "launcher_minecraft_api.h"
 #include "server_minecraft_app.h"
@@ -36,8 +37,15 @@
 static void empty() {}
 
 std::function<void(std::string, std::function<void(std::string)>)> execCommand;
+std::function<void(std::function<void()>)> queueForServerThread;
 std::stringstream cmdss;
 extern "C" void set_record(void (*r)(const char* buf, size_t length));
+extern "C" void _exec_command(std::string cmd, std::function<void(std::string)> callback) {
+  if (execCommand) execCommand(cmd, callback);
+}
+extern "C" void _server_thread(std::function<void()> callback) {
+  if (queueForServerThread) queueForServerThread(callback);
+}
 bool killed = false;
 
 extern "C" void bridge_init(char *name) { 
@@ -164,14 +172,16 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
       [](mcpe::string const& s) {
         Log::debug("Bridge", "Saving level: %s", s.c_str());
       });
-  Log::trace("Bridge", "Loading language data");
-  I18n::loadLanguages(*resourcePackManager, "en_US");
+  Log::trace("Bridge", "Loading language data(%s)", props.language.get().c_str());
+  I18n::loadLanguages(*resourcePackManager, props.language.get());
   resourcePackManager->onLanguageChanged();
   Log::info("Bridge", "Server initialized");
-  notify(&instance);
-  instance.startServerThread();
 
   set_record([](auto buf, auto size) { cmdss << std::string(buf, size); });
+
+  queueForServerThread = [&](auto callback) {
+    instance.queueForServerThread(callback);
+  };
 
   execCommand = [&](auto line, auto callback) {
     if (line.size() == 0) return;
@@ -188,8 +198,8 @@ extern "C" void bridge_start(void* handle, void (*notify)(ServerInstance*)) {
     });
   };
 
-  ConsoleReader reader;
-  std::string line;
+  instance.startServerThread();
+  notify(&instance);
 
   sd_notify(0, "READY=1");
 

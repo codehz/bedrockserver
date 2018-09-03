@@ -68,6 +68,7 @@ class ServerProperties
 {
 
 public:
+  property<std::string> language;
   property<std::string> worldDir;
   property<std::string> worldName;
   property<int> worldGenerator;
@@ -83,7 +84,8 @@ public:
   property<bool> onlineMode;
   property<float> playerIdleTimeout;
 
-  ServerProperties() : worldDir("level-dir", "world"),
+  ServerProperties() : language("language", "en_US"),
+                       worldDir("level-dir", "world"),
                        worldName("level-name", "world"),
                        worldSeed("level-seed", "0"),
                        worldGenerator("level-generator", 1),
