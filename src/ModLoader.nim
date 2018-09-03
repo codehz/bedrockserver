@@ -4,14 +4,18 @@ import hybris, logger, elf, HookManager
 var depCache = initTable[string, HashSet[string]] 16
 var loadedMods = initSet[string] 16
 var mods = initTable[string, Handle] 16
+var execList = initOrderedSet[proc () {.cdecl.}] 16
 
 proc loadMod(path: string): Handle =
   result = dlopen path
   if not result.isValid:
     error "ModLoader", "Failed to load mod ", path, ": ", dlerror()
   let initFn = cast[proc () {.cdecl.}](result.dlsym "mod_init")
+  let execFn = cast[proc () {.cdecl.}](result.dlsym "mod_exec")
   if initFn != nil:
     initFn()
+  if execFn != nil:
+    execList.incl(execFn)
 
 proc getModDependencies(path: string): seq[string] =
   var xfile = memfiles.open(path, fmRead)
@@ -75,10 +79,8 @@ proc loadAll*(srcs: seq[string]) =
   for m in modsToLoad:
     loadMulti m, modsToLoad
   info "ModLoader", "Loaded ", count, " Mod"
-  for val in mods.values:
-    let exec = cast[proc () {.cdecl.}](val.dlsym "mod_exec")
-    if exec != nil:
-      exec()
+  for val in execList:
+    val()
 
 proc notify*(srv: pointer) {.cdecl.} =
   for val in mods.values:
