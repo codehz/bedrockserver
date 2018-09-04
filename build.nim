@@ -12,7 +12,6 @@ const
     "-m32",
     "-O3",
     "-g",
-    # "-flto",
     "-L./lib",
     "-lrt",
     "-lpthread",
