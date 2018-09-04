@@ -20,7 +20,7 @@ jobs:
       - run:
           name: Building
           command: |
-            PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 5
+            PATH=$PATH:/data/bin CXX=/data/bin/i686-linux-android-g++ CC=/data/bin/i686-linux-android-gcc /root/.nimble/bin/nimake build -v 5
             cp /data/projects/bin /data/out -r
       - run:
           name: Scanning dependencies
