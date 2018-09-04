@@ -18,9 +18,14 @@ jobs:
             echo i386.android.gcc.cpp.linkerexe = '"/data/bin/i686-linux-android-g++"' >> /etc/nim.cfg
             mkdir -p /data/out
       - run:
+          name: Sync submodules
+          command: |
+            git submodule init
+            git submodule update
+      - run:
           name: Building
           command: |
-            PATH=$PATH:/data/bin CXX=/data/bin/i686-linux-android-g++ CC=/data/bin/i686-linux-android-gcc /root/.nimble/bin/nimake build -v 5
+            PATH=$PATH:/data/sdk/bin /root/.nimble/bin/nimake build -v 5
             cp /data/projects/bin /data/out -r
       - run:
           name: Scanning dependencies

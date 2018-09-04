@@ -67,8 +67,8 @@ target "bin" / "bedrockserver":
     exec &"nim cpp -o:{target} {Options} {main}"
 
 let
-  cpp = getEnv("CXX", "i686-linux-android-g++")
-  cc = getEnv("CC", "i686-linux-android-gcc")
+  cpp = getEnv("ANDROID_CXX", "i686-linux-android-g++")
+  cc = getEnv("ANDROID_CC", "i686-linux-android-gcc")
 
 const BridgeCPPOptions = [
   "-std=c++14",
