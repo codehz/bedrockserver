@@ -1,0 +1,47 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: codehz/mcpe-sdk:mod
+    working_directory: /data/projects
+    steps:
+      - checkout
+      - run:
+          name: Installing dependencies
+          command: |
+            pacman -Sy --noconfirm --needed nim nimble base-devel cmake patchelf glibc gawk coreutils sed lib32-gcc-libs lib32-glibc lib32-gmp lib32-libffi lib32-libgcrypt lib32-libgpg-error lib32-libltdl lib32-libunistring lib32-systemd lib32-xz git
+            nimble install -y https://github.com/codehz/nimake
+            echo >> /etc/nim.cfg
+            echo i386.android.gcc.cpp.exe = '"/data/bin/i686-linux-android-g++"' >> /etc/nim.cfg
+            echo i386.android.gcc.cpp.linkerexe = '"/data/bin/i686-linux-android-g++"' >> /etc/nim.cfg
+            mkdir -p /data/out
+      - run:
+          name: Building
+          command: |
+            PATH=$PATH:/data/bin /root/.nimble/bin/nimake build -v 5
+            cp /data/projects/bin /data/out -r
+      - run:
+          name: Scanning dependencies
+          command: |
+            cd /data/out
+            mkdir lib
+            ldd bin/bedrockserver | awk '/=>/{print $(NF-1)}' | sort | uniq | xargs -i cp {} lib
+            cp /usr/lib32/libnss_* lib
+            patchelf --set-interpreter "./lib/ld-linux.so.2" bin/bedrockserver
+            patchelf --set-rpath "./lib" bin/bedrockserver
+      - run:
+          name: Packaging
+          command: |
+            cd /data/out
+            tar cvzf ../out.tgz .
+
+      - store_artifacts:
+          path: /data/out.tgz
+      - store_artifacts:
+          path: /data/out
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
