@@ -5,11 +5,10 @@
 #include <log.h>
 
 extern "C" const char* bridge_version();
-extern std::function<void(std::string, std::function<void(std::string)>)>
-    execCommand;
+extern std::function<std::string(std::string)> execCommand;
+extern std::function<void(std::function<void()>)> queueForServerThread;
 extern bool killed;
 static sd_bus* bus = nullptr;
-static unsigned rid = 0;
 
 extern "C" sd_bus* get_dbus() {
   return bus;
@@ -25,23 +24,9 @@ static int method_exec(sd_bus_message* m,
                        void* userdata,
                        sd_bus_error* ret_error) {
   char* dat;
-  int current_rid = rid++;
   sd_bus_message_read(m, "s", &dat);
-  sd_bus_reply_method_return(m, "u", current_rid);
-  if (!execCommand) return 0;
-  execCommand(dat, [current_rid](auto data) {
-    sd_bus_message* result = NULL;
-    int r = sd_bus_message_new_signal(bus, &result, "/one/codehz/bedrockserver", "one.codehz.bedrockserver.core",
-                                      "exec_result");
-    if (r < 0)
-      goto finish;
-    sd_bus_message_append(result, "us", current_rid, data.c_str());
-    sd_bus_send(bus, result, NULL);
-  finish:
-    sd_bus_message_unrefp(&result);
-    if (r < 0)
-      Log::error("DBUS", "%s", strerror(-r));
-  });
+  auto data = execCommand(dat);
+  sd_bus_reply_method_return(m, "s", data.c_str());
 }
 
 
@@ -55,9 +40,8 @@ static int method_stop(sd_bus_message* m,
 static const sd_bus_vtable core_vtable[] = {
     SD_BUS_VTABLE_START(0),
     SD_BUS_METHOD("ping", "", "s", method_pong, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("exec", "s", "u", method_exec, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("exec", "s", "s", method_exec, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("stop", "", "", method_stop, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_SIGNAL("exec_result", "us", 0),
     SD_BUS_SIGNAL("log", "yss", 0),
     SD_BUS_VTABLE_END};
 
@@ -118,9 +102,15 @@ dump:
 void dbus_loop() {
   int r = 0;
   while (!killed) {
-    r = sd_bus_process(bus, NULL);
-    if (r < 0)
-      break;
+    if (queueForServerThread) {
+      queueForServerThread([&] {
+        sd_bus_process(bus, NULL);
+      });
+    } else {
+      r = sd_bus_process(bus, NULL);
+      if (r < 0)
+        break;
+    }
 
     if (r > 0)
       continue;
