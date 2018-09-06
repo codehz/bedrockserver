@@ -1,6 +1,7 @@
 #include <systemd/sd-bus.h>
 #include <systemd/sd-journal.h>
 #include <functional>
+#include <condition_variable>
 
 #include <log.h>
 
@@ -99,22 +100,33 @@ dump:
   exit(2);
 }
 
+static std::condition_variable cv;
+static std::mutex mtx;
+
 void dbus_loop() {
   int r = 0;
+  bool ready = false;
   while (!killed) {
     if (queueForServerThread) {
       queueForServerThread([&] {
-        sd_bus_process(bus, NULL);
+        std::unique_lock<std::mutex> lk(mtx);
+        r = sd_bus_process(bus, NULL);
+        ready = true;
+        lk.unlock();
+        cv.notify_one();
       });
+      std::unique_lock<std::mutex> lk(mtx);
+      cv.wait(lk, [&] { return ready; });
+      ready = false;
     } else {
       r = sd_bus_process(bus, NULL);
-      if (r < 0)
-        break;
     }
+    if (r < 0)
+      break;
 
     if (r > 0)
       continue;
-    r = sd_bus_wait(bus, (uint64_t)100000);
+    r = sd_bus_wait(bus, (uint64_t)-1);
     if (r < 0)
       break;
   }
