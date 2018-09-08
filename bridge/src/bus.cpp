@@ -15,6 +15,9 @@ extern "C" sd_bus* get_dbus() {
   return bus;
 }
 
+extern "C" const char* (*_exec_hook)(const char*);
+const char* (*_exec_hook)(const char*) = nullptr;
+
 static int method_pong(sd_bus_message* m,
                        void* userdata,
                        sd_bus_error* ret_error) {
@@ -26,7 +29,8 @@ static int method_exec(sd_bus_message* m,
                        sd_bus_error* ret_error) {
   char* dat;
   sd_bus_message_read(m, "s", &dat);
-  auto data = execCommand(dat);
+  auto custom = _exec_hook ? _exec_hook(dat) : nullptr;
+  auto data = custom ? custom : execCommand(dat);
   sd_bus_reply_method_return(m, "s", data.c_str());
 }
 
