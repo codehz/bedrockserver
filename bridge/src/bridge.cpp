@@ -96,6 +96,9 @@ extern "C" void bridge_start(void *handle, void (*notify)(ServerInstance *))
   levelSettings.lanBroadcast = true;
   levelSettings.commandsEnabled = true;
   levelSettings.texturepacksRequired = false;
+  levelSettings.defaultSpawnX = INT32_MIN;
+  levelSettings.defaultSpawnY = INT32_MIN;
+  levelSettings.defaultSpawnZ = INT32_MIN;
 
   FilePathManager pathmgr(appPlatform->getCurrentStoragePath(), false);
   pathmgr.setPackagePath(appPlatform->getPackagePath());
